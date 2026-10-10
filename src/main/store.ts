@@ -10,7 +10,7 @@ import { uniqueSnipName } from './lib/filename'
 import { expiresAt, splitExpired } from '../shared/expiry'
 import type { ShelfItem } from '../shared/types'
 
-const THUMB_WIDTH = 440
+const THUMB_WIDTH = 520
 const THUMB_MAX_HEIGHT = 520
 const DRAG_ICON_WIDTH = 96
 
@@ -85,7 +85,9 @@ export class SnipStore extends EventEmitter {
 
     try {
       mkdirSync(this.dir, { recursive: true })
+      const tw = performance.now()
       await writeFile(filePath, png)
+      if (process.env.PERCH_DEBUG) console.log(`[perch] write ${Math.round(performance.now() - tw)} ms`)
     } catch (err) {
       this.dedupe.untrack(id)
       throw err

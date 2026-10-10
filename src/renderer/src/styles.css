@@ -1,0 +1,341 @@
+:root {
+  --gap: 10px;
+  --panel: #151619;
+  --card: #1f2125;
+  --card-hover: #26292e;
+  --line: rgba(255, 255, 255, 0.07);
+  --text: #ecebe8;
+  --muted: #8d9097;
+  --accent: #f4a24c;
+  --accent-ink: #1b1308;
+  --danger: #f07a6a;
+  --radius: 14px;
+  --ease-out: cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  --fast: 160ms;
+  color-scheme: dark;
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+html[data-view='shelf'],
+html[data-view='shelf'] body {
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+kbd {
+  font: inherit;
+  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+}
+
+/* ---------- Shelf panel ---------- */
+
+.panel {
+  position: absolute;
+  inset: var(--gap);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition:
+    transform var(--fast) ease-out,
+    opacity var(--fast) ease-out;
+}
+
+.panel.edge-right {
+  transform: translateX(calc(100% + var(--gap) * 2));
+}
+.panel.edge-left {
+  transform: translateX(calc(-100% - var(--gap) * 2));
+}
+.panel.is-revealed {
+  transform: none;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 12px 8px;
+  flex: none;
+}
+.head .mark {
+  color: var(--accent);
+}
+.head .name {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.head .count {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.status {
+  margin: 0 12px 8px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: rgba(244, 162, 76, 0.12);
+  color: var(--accent);
+  font-size: 12px;
+  flex: none;
+}
+
+.scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: transparent;
+}
+.scroll:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+}
+.scroll::-webkit-scrollbar-button {
+  display: none;
+}
+
+.inner {
+  padding: 0 10px 10px;
+}
+
+.empty {
+  margin: 6px 4px 6px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---------- Card ---------- */
+
+.card {
+  position: relative;
+  border-radius: 10px;
+  background: var(--card);
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  cursor: grab;
+  transition:
+    background var(--fast) ease,
+    opacity var(--fast) ease,
+    outline-color var(--fast) ease;
+  animation: land 190ms var(--ease-out) both;
+}
+.card:hover {
+  background: var(--card-hover);
+}
+.card:active {
+  cursor: grabbing;
+}
+.card.is-selected {
+  outline-color: var(--accent);
+}
+.card.is-dragged .thumb img {
+  opacity: 0.45;
+}
+.card.is-leaving {
+  animation: fly 170ms ease-in both;
+  pointer-events: none;
+}
+
+.thumb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+  background:
+    repeating-conic-gradient(rgba(255, 255, 255, 0.025) 0 25%, transparent 0 50%) 0 0 / 12px 12px,
+    #101114;
+}
+.thumb img {
+  display: block;
+  max-width: 100%;
+  max-height: 240px;
+  transition: opacity var(--fast) ease;
+}
+
+.check {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgba(16, 17, 20, 0.86);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transform: translateY(-2px);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+.card:hover .actions {
+  opacity: 1;
+  transform: none;
+}
+.actions button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #d6d5d2;
+  cursor: pointer;
+}
+.actions button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.actions button.is-on {
+  color: var(--accent);
+}
+.actions button:last-child:hover {
+  color: var(--danger);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 9px 7px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.meta .dims {
+  font-variant-numeric: tabular-nums;
+}
+.meta .flyoff {
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.meta .flyoff.is-pinned {
+  color: var(--accent);
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+  flex: none;
+}
+.link {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes land {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(1px) scale(1.005);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fly {
+  to {
+    opacity: 0;
+    transform: translate(14px, -16px) rotate(2deg) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .card,
+  .card.is-leaving,
+  .actions {
+    animation: none !important;
+    transition: none !important;
+  }
+}

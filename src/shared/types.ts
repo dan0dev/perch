@@ -27,6 +27,7 @@ export interface ShelfItem {
 export interface ShelfState {
   items: ShelfItem[]
   paused: boolean
+  edge: Edge
 }
 
 export type CardAction = 'copy' | 'save' | 'delete' | 'pin'
