@@ -1,0 +1,24 @@
+{
+  "name": "perch-demo-video",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Remotion source for the Perch drag-and-drop demo video",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "still": "remotion still src/index.ts PerchDemo",
+    "render": "remotion render src/index.ts PerchDemo out/perch-demo.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.534",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.534"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}
