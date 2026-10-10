@@ -1,4 +1,4 @@
-import { WINDOW } from './layout'
+import { PORTRAIT, type Layout } from './layout'
 
 const TITLE_H = 56
 
@@ -7,7 +7,8 @@ const Control = ({ children }: { children: React.ReactNode }): React.JSX.Element
 )
 
 /** Generic dark chat window with Windows 11 caption buttons. The body stays empty on purpose. */
-export function ChatWindow(): React.JSX.Element {
+export function ChatWindow({ layout = PORTRAIT }: { layout?: Layout }): React.JSX.Element {
+  const { WINDOW } = layout
   const glyph = { width: 20, height: 20, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5 } as const
   return (
     <div

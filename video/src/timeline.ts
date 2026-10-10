@@ -1,5 +1,5 @@
 import { Easing, interpolate, spring } from 'remotion'
-import { CARD_INDICES, DROP_CENTER, cardCenter, cardRect, tileCenter, type CardIndex, type Point } from './layout'
+import { CARD_INDICES, PORTRAIT, type CardIndex, type Layout, type Point } from './layout'
 import { FPS, SPIN_DEG } from './perch'
 
 /* ---------- Schedule (frames at 30 fps) ---------- */
@@ -49,14 +49,26 @@ interface Segment {
   ease?: (t: number) => number
 }
 
-export const SEGMENTS: readonly Segment[] = [
-  { from: 0, to: 10, p0: { x: 600, y: 660 }, p1: { x: 850, y: 390 }, c: { x: 690, y: 540 } },
-  { from: 13, to: 19, p0: { x: 850, y: 390 }, p1: { x: 850, y: 618 } },
-  { from: 22, to: 28, p0: { x: 850, y: 618 }, p1: { x: 850, y: 846 } },
-  { from: 31, to: 38, p0: { x: 850, y: 846 }, p1: cardCenter(1) },
-  { from: 43, to: 91, p0: cardCenter(1), p1: DROP_CENTER, c: { x: 531, y: 733 }, ease: easeDrag },
-  { from: 132, to: 148, p0: DROP_CENTER, p1: { x: 396, y: 1092 } }
-]
+/** Cursor path for a layout, derived from where the cards and the composer sit. */
+export function segmentsFor(L: Layout): readonly Segment[] {
+  const grab = L.cardCenter(1)
+  const drop = L.DROP_CENTER
+  const first = L.clickPoint(0)
+  const start = { x: first.x - 250, y: first.y + 270 }
+  // Bow the drag by 20% of its length, up and to the left, so it arcs instead of running straight.
+  const mid = { x: (grab.x + drop.x) / 2, y: (grab.y + drop.y) / 2 }
+  const bow = { x: -(drop.y - grab.y) * 0.204, y: (drop.x - grab.x) * 0.204 }
+  return [
+    { from: 0, to: 10, p0: start, p1: first, c: { x: start.x + 90, y: start.y - 120 } },
+    { from: 13, to: 19, p0: first, p1: L.clickPoint(1) },
+    { from: 22, to: 28, p0: L.clickPoint(1), p1: L.clickPoint(2) },
+    { from: 31, to: 38, p0: L.clickPoint(2), p1: grab },
+    { from: 43, to: 91, p0: grab, p1: drop, c: { x: mid.x + bow.x, y: mid.y + bow.y }, ease: easeDrag },
+    { from: 132, to: 148, p0: drop, p1: { x: drop.x + 20, y: drop.y + 22 } }
+  ]
+}
+
+export const SEGMENTS = segmentsFor(PORTRAIT)
 
 const quad = (p0: Point, c: Point, p1: Point, t: number): Point => {
   const u = 1 - t
@@ -67,9 +79,10 @@ const quad = (p0: Point, c: Point, p1: Point, t: number): Point => {
 }
 
 /** Cursor tip position. Holds the previous waypoint between segments. */
-export function cursorAt(frame: number): Point {
-  let pos = SEGMENTS[0]!.p0
-  for (const s of SEGMENTS) {
+export function cursorAt(frame: number, L: Layout = PORTRAIT): Point {
+  const segments = L === PORTRAIT ? SEGMENTS : segmentsFor(L)
+  let pos = segments[0]!.p0
+  for (const s of segments) {
     if (frame < s.from) break
     if (frame >= s.to) {
       pos = s.p1
@@ -82,8 +95,8 @@ export function cursorAt(frame: number): Point {
   return pos
 }
 
-const inside = (p: Point, i: CardIndex): boolean => {
-  const r = cardRect(i)
+const inside = (p: Point, i: CardIndex, L: Layout): boolean => {
+  const r = L.cardRect(i)
   return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h
 }
 
@@ -112,8 +125,8 @@ export interface Scene {
   tiles: { enter: number; ring: number; check: number }[]
 }
 
-export function sceneAt(frame: number): Scene {
-  const cursor = cursorAt(frame)
+export function sceneAt(frame: number, L: Layout = PORTRAIT): Scene {
+  const cursor = cursorAt(frame, L)
 
   // Press and ripples: three clicks, the grab, and the release.
   const clickPress = Math.max(...CLICKS.map((c) => interpolate(frame, [c - 1, c, c + 3], [0, 1, 0], clamp)))
@@ -122,14 +135,14 @@ export function sceneAt(frame: number): Scene {
   const ripples = [...CLICKS, DROP]
     .map((c) => ({ c, t: (frame - c) / 12 }))
     .filter(({ t }) => t >= 0 && t <= 1)
-    .map(({ c, t }) => ({ ...cursorAt(c), t }))
+    .map(({ c, t }) => ({ ...cursorAt(c, L), t }))
 
   // Lift of the leading card; the shelf ghosts and selection clear with it.
   const lead = Math.min(1, springAt(frame, LIFT_AT, SPRING_LIFT))
   const restore = interpolate(frame, [RESTORE[0], RESTORE[1]], [0, 1], { ...clamp, easing: easeMove })
 
   const shelf = CARD_INDICES.map((i) => {
-    const samples = [0, 1, 2].map((k) => (inside(cursorAt(frame - k), i) ? 1 : 0))
+    const samples = [0, 1, 2].map((k) => (inside(cursorAt(frame - k, L), i, L) ? 1 : 0))
     const hover = (samples[0]! + samples[1]! + samples[2]!) / 3
     const selected = Math.min(1, springAt(frame, CLICKS[i]!, SPRING_RING)) * (1 - lead)
     return { hover: hover * (1 - lead), selected, ghost: lead * (1 - restore) }
@@ -140,14 +153,14 @@ export function sceneAt(frame: number): Scene {
   const float = 3 * Math.sin(((frame - 91) / 40) * Math.PI * 2) * hoverIn
   const dip = 1 - 0.06 * interpolate(frame, [DROP - 2, DROP + 1], [0, 1], clamp)
   const absorb = interpolate(frame, [DROP + 1, DROP + 7], [0, 1], { ...clamp, easing: easeIn })
-  const tilePoint = tileCenter(1)
+  const tilePoint = L.tileCenter(1)
 
   const cards: StackCard[] = STACK_ORDER.map((index, k) => {
     const lift = Math.min(1, springAt(frame, LIFT_AT + k * 2, SPRING_LIFT))
-    const trail = cursorAt(frame - LAG[k]!)
-    const prev = cursorAt(frame - LAG[k]! - 2)
+    const trail = cursorAt(frame - LAG[k]!, L)
+    const prev = cursorAt(frame - LAG[k]! - 2, L)
     const lean = Math.max(-6, Math.min(6, -((trail.x - prev.x) / 2) * 0.45))
-    const slot = cardCenter(index)
+    const slot = L.cardCenter(index)
     const fan = FAN[k]!
     const x = slot.x + (trail.x + fan.x - slot.x) * lift
     const y = slot.y + (trail.y + fan.y + float - slot.y) * lift

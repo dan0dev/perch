@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DROP_CENTER, cardCenter, cardRect, tileCenter, type CardIndex } from '../src/layout'
+import { DROP_CENTER, PORTRAIT, WIDE, cardCenter, cardRect, tileCenter, type CardIndex } from '../src/layout'
 import { DURATION, FPS } from '../src/perch'
 import { cursorAt, sceneAt } from '../src/timeline'
 
@@ -179,5 +179,39 @@ describe('determinism', () => {
       ]
       for (const n of nums) expect(Number.isFinite(n)).toBe(true)
     }
+  })
+})
+
+describe('wide layout (16:10)', () => {
+  it('is 16:10 and gives the drop zone far more room from the shelf', () => {
+    expect(WIDE.W / WIDE.H).toBeCloseTo(1.6, 5)
+    const gap = (L: typeof PORTRAIT): number => L.SHELF_X - (L.COMPOSER.x + L.COMPOSER.w)
+    expect(gap(PORTRAIT)).toBeLessThan(60)
+    expect(gap(WIDE)).toBeGreaterThanOrEqual(150)
+  })
+
+  it('keeps the same choreography: grab the middle card, drop at the composer centre', () => {
+    expect(cursorAt(39, WIDE)).toEqual(WIDE.cardCenter(1))
+    expect(cursorAt(91, WIDE)).toEqual(WIDE.DROP_CENTER)
+  })
+
+  it('never teleports between frames', () => {
+    for (const f of frames.slice(1)) {
+      expect(dist(cursorAt(f, WIDE), cursorAt(f - 1, WIDE))).toBeLessThan(90)
+    }
+  })
+
+  it('keeps every card and tile on the canvas and ends clean', () => {
+    for (const f of frames) {
+      for (const c of sceneAt(f, WIDE).stack.cards) {
+        expect(c.x).toBeGreaterThan(0)
+        expect(c.x).toBeLessThan(WIDE.W)
+        expect(c.y).toBeGreaterThan(0)
+        expect(c.y).toBeLessThan(WIDE.H)
+      }
+    }
+    const end = sceneAt(149, WIDE)
+    expect(end.composer.glow).toBe(0)
+    for (const t of end.tiles) expect(t.check).toBe(1)
   })
 })
