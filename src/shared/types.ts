@@ -44,7 +44,8 @@ export interface PerchApi {
   onState(cb: (state: ShelfState) => void): () => void
   onReveal(cb: (visible: boolean) => void): () => void
   ready(): void
-  startDrag(ids: string[]): void
+  /** `dragImage` is a PNG data URL drawn by the renderer; main falls back to the thumbnail. */
+  startDrag(ids: string[], dragImage?: string): void
   action(id: string, action: CardAction): void
   setHover(hovering: boolean): void
   reportHeight(px: number): void

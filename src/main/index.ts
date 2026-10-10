@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { app, globalShortcut, ipcMain } from 'electron'
+import { app, globalShortcut, ipcMain, nativeImage } from 'electron'
 import { ClipboardWatcher } from './clipboard'
 import { SnipStore } from './store'
 import { Shelf } from './shelf'
@@ -35,7 +35,7 @@ if (!app.requestSingleInstanceLock()) {
       if (typeof px === 'number') shelf?.setContentHeight(px)
     })
 
-    ipcMain.on(IPC.startDrag, (e, ids: unknown) => {
+    ipcMain.on(IPC.startDrag, (e, ids: unknown, dragImage: unknown) => {
       if (!Array.isArray(ids)) return
       const snips = ids.flatMap((id) => {
         const s = typeof id === 'string' ? store.get(id) : undefined
@@ -43,10 +43,15 @@ if (!app.requestSingleInstanceLock()) {
       })
       const first = snips[0]
       if (!first) return
+      const drawn =
+        typeof dragImage === 'string' && dragImage.startsWith('data:image/png;base64,')
+          ? nativeImage.createFromDataURL(dragImage)
+          : null
+      const icon = drawn && !drawn.isEmpty() ? drawn : first.dragIcon
       shelf?.setDragging(true)
       try {
         // Blocks on Windows until the drop finishes or is cancelled.
-        e.sender.startDrag({ file: first.filePath, files: snips.map((s) => s.filePath), icon: first.dragIcon })
+        e.sender.startDrag({ file: first.filePath, files: snips.map((s) => s.filePath), icon })
         store.markDragged(snips.map((s) => s.id))
       } catch (err) {
         console.error('[perch] drag failed:', err)

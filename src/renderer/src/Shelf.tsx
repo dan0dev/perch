@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { ShelfState } from '@shared/types'
 import { Card } from './Card'
 import { BirdMark } from './icons'
+import { drawDragImage } from './dragImage'
 
 /** Transparent space around the panel, for its shadow. Mirrors --gap in CSS. */
 const GAP = 10
@@ -59,6 +60,7 @@ export function Shelf(): React.JSX.Element {
     }
     const ro = new ResizeObserver(report)
     ro.observe(panel)
+    ro.observe(scroll) // shrinks when the footer appears
     ro.observe(inner)
     report()
     return () => ro.disconnect()
@@ -74,9 +76,14 @@ export function Shelf(): React.JSX.Element {
   }, [])
 
   const startDrag = useCallback(
-    (id: string) => {
+    (id: string, img: HTMLImageElement | null) => {
       const ids = selected.has(id) ? state.items.filter((i) => selected.has(i.id)).map((i) => i.id) : [id]
-      window.perch.startDrag(ids)
+      const css = getComputedStyle(document.documentElement)
+      const accent = css.getPropertyValue('--accent').trim()
+      const ink = css.getPropertyValue('--accent-ink').trim()
+      window.perch.startDrag(ids, img ? drawDragImage(img, ids.length, accent, ink) : undefined)
+      // Dragged out to another app: the selection has done its job.
+      if (selected.has(id)) setSelected(new Set())
     },
     [selected, state.items]
   )
@@ -124,7 +131,7 @@ export function Shelf(): React.JSX.Element {
 
       {selected.size > 1 && (
         <footer className="foot">
-          <span>{selected.size} selected. Drag one to take them all.</span>
+          <span>{selected.size} selected. Drag to take all.</span>
           <button type="button" className="link" onClick={() => setSelected(new Set())}>
             Clear
           </button>
