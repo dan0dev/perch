@@ -68,3 +68,21 @@ jobs:
             dist/Perch-Setup-*.exe dist/Perch-*-win-x64.zip dist/SHA256SUMS.txt \
             --title "Perch ${GITHUB_REF_NAME#v}" \
             --generate-notes
+
+  # Opens the winget-pkgs pull request for the new version. Needs a classic token with the
+  # public_repo scope saved as the WINGET_TOKEN secret, and works once dan0dev.Perch exists in
+  # winget-pkgs (the first version was submitted by hand). Skipped when the secret is missing.
+  winget:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    env:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+    steps:
+      - name: Submit to winget
+        if: env.WINGET_TOKEN != ''
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: dan0dev.Perch
+          installers-regex: 'Perch-Setup-.*\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}

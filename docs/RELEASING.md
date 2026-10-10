@@ -42,7 +42,9 @@ The manifests for each release live in `packaging/winget/<version>/` and can be 
    wingetcreate submit packaging\winget\0.1.0 --token (gh auth token)
    ```
 
-3. Later releases, after the GitHub Release exists:
+3. Later releases are submitted automatically: the Release workflow's `winget` job opens the
+   pull request when a `WINGET_TOKEN` secret exists (a classic GitHub token with only the
+   `public_repo` scope). Without the secret the job is skipped and you can do it by hand:
 
    ```powershell
    wingetcreate update dan0dev.Perch --version 0.2.0 --urls https://github.com/dan0dev/perch/releases/download/v0.2.0/Perch-Setup-0.2.0.exe --submit --token (gh auth token)

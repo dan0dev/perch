@@ -30,6 +30,9 @@ needed. Windows 10 or 11, 64-bit.
 > **"Windows protected your PC"?** Perch isn't code-signed yet. Click
 > **More info → Run anyway**.
 
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by
+[SignPath Foundation](https://signpath.org).
+
 ## Use
 
 1. Take a snip with <kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>.
