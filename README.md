@@ -14,7 +14,7 @@ the clipboard, shows it as a card at the edge of your screen, and lets you drag 
 browser drop zone as a real PNG file. Snips expire on their own.
 
 <p align="center">
-  <img src="docs/screenshot.png" width="820" alt="Perch's stack of screenshot cards at the right edge of the screen, next to a web form with an upload drop zone" />
+  <img src="docs/screenshot.png" width="820" alt="A screenshot card being dragged from Perch's shelf at the right edge of the screen into Google Lens's drop zone" />
 </p>
 
 > **Download:** grab `Perch-Setup-x.y.z.exe` from the
