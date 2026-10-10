@@ -14,7 +14,7 @@ the clipboard, shows it as a card at the edge of your screen, and lets you drag 
 browser drop zone as a real PNG file. Snips expire on their own.
 
 <p align="center">
-  <img src="docs/demo.gif" width="400" alt="Three screenshots are selected on Perch's shelf at the right edge of the screen, dragged together into an AI chat's drop zone, and land as attachments" />
+  <img src="docs/demo-wide.gif" width="720" alt="Three screenshots are selected on Perch's shelf at the right edge of the screen, dragged together into an AI chat's drop zone, and land as attachments" />
 </p>
 
 > **Download:** grab `Perch-Setup-x.y.z.exe` from the
