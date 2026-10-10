@@ -13,16 +13,16 @@ you can paste it but can't drag it into an upload box. Perch catches every image
 the clipboard, shows it as a card at the edge of your screen, and lets you drag it into any app or
 browser drop zone as a real PNG file. Snips expire on their own.
 
+<p align="center">
+  <img src="docs/screenshot.png" width="820" alt="Perch's stack of screenshot cards at the right edge of the screen, next to a web form with an upload drop zone" />
+</p>
+
 > **Download:** grab `Perch-Setup-x.y.z.exe` from the
 > [latest release](https://github.com/dan0dev/perch/releases/latest) and run it. One click, no
 > admin rights, Windows 10 or 11. More at [perchwebsite.vercel.app](https://perchwebsite.vercel.app).
 >
 > Free code signing provided by [SignPath.io](https://signpath.io), certificate by
 > [SignPath Foundation](https://signpath.org).
-
-<p align="center">
-  <img src="docs/screenshot.png" width="820" alt="Perch's stack of screenshot cards at the right edge of the screen, next to a web form with an upload drop zone" />
-</p>
 
 ## Shortcuts
 
