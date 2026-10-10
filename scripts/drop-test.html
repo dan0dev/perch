@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src blob:" />
+<title>Perch drop test</title>
+<style>
+  body { font: 14px system-ui, sans-serif; background: #111; color: #eee; margin: 32px; }
+  #zone { border: 2px dashed #555; border-radius: 14px; padding: 48px; text-align: center; color: #999; }
+  #zone.over { border-color: #f4a24c; color: #f4a24c; }
+  li { margin: 10px 0; } img { max-width: 240px; display: block; margin-top: 6px; border-radius: 6px; }
+  input { margin-top: 16px; color: #ccc; }
+</style>
+</head>
+<body>
+<h2>Perch drop test (local, uploads nothing)</h2>
+<div id="zone">Drop snips here</div>
+<input type="file" id="pick" multiple accept="image/*" />
+<ol id="log"></ol>
+<script>
+  const zone = document.getElementById('zone'), log = document.getElementById('log')
+  const show = (files, how) => {
+    for (const f of files) {
+      const li = document.createElement('li')
+      li.textContent = `${how}: ${f.name}  (${f.type || 'no type'}, ${f.size.toLocaleString()} bytes)`
+      const img = new Image(); img.src = URL.createObjectURL(f); li.append(img); log.prepend(li)
+    }
+  }
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over') })
+  zone.addEventListener('dragleave', () => zone.classList.remove('over'))
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('over'); show(e.dataTransfer.files, 'dropped') })
+  document.getElementById('pick').addEventListener('change', e => show(e.target.files, 'picked'))
+  // Stop the browser from opening files dropped outside the zone.
+  addEventListener('dragover', e => e.preventDefault()); addEventListener('drop', e => e.preventDefault())
+</script>
+</body>
+</html>

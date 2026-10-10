@@ -1,6 +1,7 @@
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { app, ipcMain } from 'electron'
+import { app, globalShortcut, ipcMain } from 'electron'
 import { ClipboardWatcher } from './clipboard'
 import { SnipStore } from './store'
 import { Shelf } from './shelf'
@@ -34,6 +35,26 @@ if (!app.requestSingleInstanceLock()) {
       if (typeof px === 'number') shelf?.setContentHeight(px)
     })
 
+    ipcMain.on(IPC.startDrag, (e, ids: unknown) => {
+      if (!Array.isArray(ids)) return
+      const snips = ids.flatMap((id) => {
+        const s = typeof id === 'string' ? store.get(id) : undefined
+        return s && existsSync(s.filePath) ? [s] : []
+      })
+      const first = snips[0]
+      if (!first) return
+      shelf?.setDragging(true)
+      try {
+        // Blocks on Windows until the drop finishes or is cancelled.
+        e.sender.startDrag({ file: first.filePath, files: snips.map((s) => s.filePath), icon: first.dragIcon })
+        store.markDragged(snips.map((s) => s.id))
+      } catch (err) {
+        console.error('[perch] drag failed:', err)
+      } finally {
+        shelf?.setDragging(false)
+      }
+    })
+
     watcher = new ClipboardWatcher((clip) => {
       const t0 = performance.now()
       store
@@ -46,6 +67,10 @@ if (!app.requestSingleInstanceLock()) {
         })
         .catch((err) => console.error('[perch] could not save snip:', err))
     })
+    if (!globalShortcut.register('Control+Alt+S', () => shelf?.toggle())) {
+      console.warn('[perch] Ctrl+Alt+S is taken by another app.')
+    }
+
     await watcher.start()
     pushState()
     console.log(`[perch] watching clipboard (${watcher.mode}), saving to ${store.dir}`)
@@ -54,6 +79,7 @@ if (!app.requestSingleInstanceLock()) {
   // No windows in the taskbar: closing them must not quit the app.
   app.on('window-all-closed', () => {})
   app.on('will-quit', () => {
+    globalShortcut.unregisterAll()
     watcher?.stop()
     store.wipe()
   })
