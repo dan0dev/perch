@@ -1,5 +1,5 @@
 import { ArrowUpIcon, CheckIcon, PlusIcon, UploadIcon } from './icons'
-import { COMPOSER, TILE, composerHeight, composerTop, type CardIndex } from './layout'
+import { COMPOSER, PORTRAIT, TILE, type CardIndex, type Layout } from './layout'
 import { ACCENT, ACCENT_RGB, FONT, RADIUS_IMAGE } from './perch'
 import { Thumb } from './thumbs'
 import type { Scene } from './timeline'
@@ -12,13 +12,13 @@ const RING_C = 2 * Math.PI * RING_R
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t
 
 /** An attachment: lands with a spring, shows a progress ring, then resolves to a check. */
-function Tile({ index, state }: { index: CardIndex; state: Scene['tiles'][number] }): React.JSX.Element {
+function Tile({ index, state, padX }: { index: CardIndex; state: Scene['tiles'][number]; padX: number }): React.JSX.Element {
   const dim = 0.5 * (1 - state.check)
   return (
     <div
       style={{
         position: 'absolute',
-        left: TILE.padX + index * (TILE.w + TILE.gap),
+        left: padX + index * (TILE.w + TILE.gap),
         top: TILE.padTop,
         width: TILE.w,
         height: TILE.h,
@@ -76,19 +76,20 @@ interface ComposerProps {
   expand: number
   glow: number
   tiles: Scene['tiles']
+  layout?: Layout
 }
 
 /** Chat input. Rests one row tall; opens upward into a drop zone, then holds the attachments. */
-export function Composer({ expand, glow, tiles }: ComposerProps): React.JSX.Element {
+export function Composer({ expand, glow, tiles, layout = PORTRAIT }: ComposerProps): React.JSX.Element {
   const border = `rgba(${lerp(255, 107, glow)},${lerp(255, 175, glow)},${lerp(255, 208, glow)},${lerp(0.1, 0.95, glow)})`
   return (
     <div
       style={{
         position: 'absolute',
-        left: COMPOSER.x,
-        top: composerTop(expand),
-        width: COMPOSER.w,
-        height: composerHeight(expand),
+        left: layout.COMPOSER.x,
+        top: layout.composerTop(expand),
+        width: layout.COMPOSER.w,
+        height: layout.composerHeight(expand),
         borderRadius: 28,
         overflow: 'hidden',
         background: '#1d222b',
@@ -129,7 +130,7 @@ export function Composer({ expand, glow, tiles }: ComposerProps): React.JSX.Elem
           </div>
         </div>
         {([0, 1, 2] as const).map((i) => (
-          <Tile key={i} index={i} state={tiles[i]!} />
+          <Tile key={i} index={i} state={tiles[i]!} padX={layout.TILE.padX} />
         ))}
       </div>
 

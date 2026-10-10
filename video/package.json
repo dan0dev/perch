@@ -8,7 +8,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "still": "remotion still src/index.ts PerchDemo",
-    "render": "remotion render src/index.ts PerchDemo out/perch-demo.mp4"
+    "render": "remotion render src/index.ts PerchDemo out/perch-demo.mp4",
+    "render:wide": "remotion render src/index.ts PerchDemoWide out/perch-demo-wide.mp4"
   },
   "dependencies": {
     "@remotion/cli": "4.0.534",

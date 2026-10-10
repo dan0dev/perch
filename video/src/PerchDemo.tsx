@@ -3,23 +3,24 @@ import { ChatWindow } from './ChatWindow'
 import { Composer } from './Composer'
 import { Cursor } from './Cursor'
 import { Desktop } from './Desktop'
-import { CARD_INDICES, cardCenter } from './layout'
+import { CARD_INDICES, LAYOUTS, type Variant } from './layout'
 import { FONT, SPIN_DEG, TILT_DEG } from './perch'
 import { PerchCard } from './PerchCard'
 import { sceneAt } from './timeline'
 
-export function PerchDemo(): React.JSX.Element {
-  const scene = sceneAt(useCurrentFrame())
+export function PerchDemo({ variant = 'portrait' }: { variant?: Variant }): React.JSX.Element {
+  const layout = LAYOUTS[variant]
+  const scene = sceneAt(useCurrentFrame(), layout)
 
   return (
     <AbsoluteFill style={{ fontFamily: FONT, overflow: 'hidden' }}>
       <Desktop />
-      <ChatWindow />
-      <Composer expand={scene.composer.expand} glow={scene.composer.glow} tiles={scene.tiles} />
+      <ChatWindow layout={layout} />
+      <Composer expand={scene.composer.expand} glow={scene.composer.glow} tiles={scene.tiles} layout={layout} />
 
       {/* The shelf: cards stay put while a copy is dragged away, like the real app. */}
       {CARD_INDICES.map((i) => {
-        const c = cardCenter(i)
+        const c = layout.cardCenter(i)
         const s = scene.shelf[i]!
         return (
           <PerchCard
