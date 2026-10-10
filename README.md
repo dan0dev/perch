@@ -50,3 +50,7 @@ npm run icons      # regenerate all icons from assets/perch.svg
   PC" on first run. Choose *More info* → *Run anyway*.
 - **Admin apps.** Windows blocks drag and drop from a normal app into an app running as
   administrator. Copy the card (… → Copy) and paste instead.
+
+## License
+
+[MIT](LICENSE) © 2026 Dániel K
