@@ -9,6 +9,7 @@ Everything the README leaves out.
 | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> | Show or hide the shelf (change it in Settings). |
 | Click a card | Select it. Drag any selected card to take them all; **Clear** under the cards deselects. |
 | Double-click a card | Open it in your default image viewer. |
+| Bin on a card (on hover) | Delete it right away. |
 | **…** on a card (on hover) | Copy, Save as…, Pin, Delete. |
 | Pin | Keep a card past its expiry. Click the pin badge to unpin. |
 | Rest the pointer where the cards appear | Slides the shelf out, if *Show on hover* is on. |

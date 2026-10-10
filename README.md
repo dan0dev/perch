@@ -33,6 +33,7 @@ browser drop zone as a real PNG file. Snips expire on their own.
 | Drag a card | Drop it into any app or upload box as a PNG. |
 | Click a card | Select it. Drag any selected card to take them all. |
 | Double-click a card | Open it in your image viewer. |
+| Bin on a card (on hover) | Delete it right away. |
 | **…** on a card | Copy, Save as, Pin, Delete. |
 | Tray icon | Click to show or hide the shelf; right-click for the menu and Settings. |
 

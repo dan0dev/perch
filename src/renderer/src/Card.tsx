@@ -67,20 +67,32 @@ export function Card({ item, leaving, now, selected, menuOpen, onToggleSelect, o
               <PinIcon width={15} height={15} />
             </button>
           )}
-          <button
-            type="button"
-            className="chip more"
-            title="More"
-            aria-label="More actions"
-            aria-expanded={menuOpen}
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggleMenu(menuOpen ? null : item.id)
-            }}
-            draggable={false}
-          >
-            <MoreIcon width={16} height={16} />
-          </button>
+          <div className="chip-row">
+            <button
+              type="button"
+              className="chip on-hover danger"
+              title="Delete"
+              aria-label="Delete"
+              onClick={run('delete')}
+              draggable={false}
+            >
+              <TrashIcon width={15} height={15} />
+            </button>
+            <button
+              type="button"
+              className="chip on-hover"
+              title="More"
+              aria-label="More actions"
+              aria-expanded={menuOpen}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleMenu(menuOpen ? null : item.id)
+              }}
+              draggable={false}
+            >
+              <MoreIcon width={16} height={16} />
+            </button>
+          </div>
         </div>
 
         {menuOpen && (
