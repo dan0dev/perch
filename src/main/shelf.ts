@@ -3,7 +3,7 @@ import { BrowserWindow, screen } from 'electron'
 import { IPC } from '../shared/ipc'
 import type { Edge, ShelfState } from '../shared/types'
 import { appIcon } from './tray'
-import { contains, inEdgeZone, type Rect } from './lib/edgeZone'
+import { contains, inRevealZone, type Rect } from './lib/edgeZone'
 
 /** Window width in DIPs, including the transparent margin for the shadow. */
 const WIDTH = 284
@@ -12,7 +12,7 @@ const SCREEN_MARGIN = 12
 const AUTO_HIDE_MS = 4000
 /** After an edge reveal, hide this soon once the pointer leaves. */
 const EDGE_LEAVE_MS = 900
-/** The pointer has to rest at the edge this long, so flicks to scrollbars don't count. */
+/** The pointer has to rest over the shelf's spot this long, so passing over it doesn't count. */
 const EDGE_DWELL_MS = 300
 const EDGE_POLL_MS = 120
 /** Matches the CSS slide-out duration. */
@@ -111,7 +111,7 @@ export class Shelf {
     else this.scheduleHide()
   }
 
-  /** Setting: slide out when the pointer rests at the shelf's screen edge. */
+  /** Setting: slide out when the pointer rests where the cards appear. */
   setEdgeHover(on: boolean): void {
     if (on && !this.edgePoll) {
       this.edgePoll = setInterval(() => this.pollEdge(), EDGE_POLL_MS)
@@ -131,8 +131,7 @@ export class Shelf {
   private pollEdge(): void {
     const p = screen.getCursorScreenPoint()
     if (!this.visible) {
-      const area = screen.getPrimaryDisplay().workArea
-      if (!inEdgeZone(p, this.bounds(), this.edge, area)) {
+      if (!inRevealZone(p, this.bounds())) {
         this.zoneSince = null
         return
       }

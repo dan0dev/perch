@@ -11,7 +11,7 @@ Everything the README leaves out.
 | Double-click a card | Open it in your default image viewer. |
 | **…** on a card (on hover) | Copy, Save as…, Pin, Delete. |
 | Pin | Keep a card past its expiry. Click the pin badge to unpin. |
-| Rest the pointer at the screen edge | Slides the shelf out, if *Show at the screen edge* is on. |
+| Rest the pointer where the cards appear | Slides the shelf out, if *Show on hover* is on. |
 | Tray icon, click | Show or hide the shelf. |
 | Tray icon, right-click | Pause capture, Shoo everything, Settings, Quit. |
 
@@ -27,8 +27,8 @@ Right-click the tray icon → **Settings…**. Changes apply right away.
 - **Hotkey** to show or hide the shelf.
 - **Screen edge**: left or right.
 - **Keep the shelf open**: it stays on screen while it has cards (the hotkey still hides it).
-- **Show at the screen edge**: rest the pointer at the shelf's edge for a moment and it slides
-  out. Quick flicks to a scrollbar or a window corner don't trigger it.
+- **Show on hover**: rest the pointer for a moment over the spot where the cards appear and they
+  slide out. Just passing over it doesn't trigger it.
 - **Launch at login.**
 
 Settings are saved in `%APPDATA%\Perch\settings.json`. From a terminal, `Perch.exe --settings`

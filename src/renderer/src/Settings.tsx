@@ -184,9 +184,9 @@ export function SettingsView(): React.JSX.Element {
         <div className="s-toggle-row">
           <div>
             <span className="s-label" id="edge-hover-label">
-              Show at the screen edge
+              Show on hover
             </span>
-            <p className="s-hint">Rest the pointer at the {settings.edge} edge of the screen for a moment.</p>
+            <p className="s-hint">Rest the pointer where the cards appear, at the {settings.edge} edge, for a moment.</p>
           </div>
           <Switch
             on={settings.showOnEdgeHover}

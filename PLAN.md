@@ -75,7 +75,7 @@ docs/DESIGN-REVIEW.md   HIG review and design decisions
 | 3. Drag out into Explorer and browser upload zones | Done, manually tested by the owner (single and batch) |
 | 4. Expiry, card actions, tray, settings | Done; Copy, Save as, Pin, Delete confirmed by the owner |
 | 5. Polish, README, installer | Done: installer built, installed, run, quit and uninstalled on Windows 11 |
-| After 5: owner's additions | Keep the shelf open, Show at the screen edge, 30-card cap, double-click to open, image-only redesign |
+| After 5: owner's additions | Keep the shelf open, Show on hover, 30-card cap, double-click to open, image-only redesign |
 
 Measured on the installed build: a capture is saved in about 10 ms after the clipboard read
 (4K: about 20 ms; reading a 4K image from the clipboard takes about 150 ms), idle CPU about 0.4%
@@ -130,10 +130,11 @@ it is a 2 px ring plus a filled check.
   since it must read and hash the image to notice a change.
 - **Keep the shelf open** (setting) never auto-hides while there are cards. Hiding it with the
   hotkey or the tray keeps it hidden until the next snip lands. With no cards it hides.
-- **Show at the screen edge** (setting) polls the pointer every 120 ms, only while the setting is
-  on. The hot strip is the outermost 2 px of the shelf's edge, only within the shelf's height (never
-  the corners), and the pointer must rest there 300 ms. After an edge reveal the shelf hides 0.9 s
-  after the pointer leaves.
+- **Show on hover** (setting, stored as `showOnEdgeHover`) polls the pointer every 120 ms, only
+  while the setting is on. The hot area is the whole spot where the cards appear (the shelf's
+  window rectangle), and the pointer must rest there 300 ms. After a hover reveal the shelf hides
+  0.9 s after the pointer leaves. (First version used only the outermost 2 px of the screen edge;
+  the owner wanted the cards' own spot.)
 - **30-card cap.** When a new card pushes the shelf past 30, the oldest unpinned cards fly off
   early. Pinned cards are never removed this way (they still count toward the 30).
 - **Double-click** opens the snip in the default image viewer (`shell.openPath`).
