@@ -7,9 +7,14 @@ export const appIcon = (): Electron.NativeImage => nativeImage.createFromPath(ic
 export interface TrayHandlers {
   isShelfVisible: () => boolean
   toggleShelf: () => void
+  isPaused: () => boolean
+  setPaused: (paused: boolean) => void
+  hasSnips: () => boolean
+  shooAll: () => void
+  openSettings: () => void
 }
 
-/** System tray icon. Milestone 4 adds pause, clear all and settings. */
+/** System tray icon: click toggles the shelf, right-click opens the menu. */
 export class PerchTray {
   private readonly tray: Tray
 
@@ -28,7 +33,15 @@ export class PerchTray {
   private menu(): Menu {
     return Menu.buildFromTemplate([
       { label: this.h.isShelfVisible() ? 'Hide shelf' : 'Show shelf', click: () => this.h.toggleShelf() },
+      {
+        label: 'Pause capture',
+        type: 'checkbox',
+        checked: this.h.isPaused(),
+        click: (item) => this.h.setPaused(item.checked)
+      },
+      { label: 'Shoo everything', enabled: this.h.hasSnips(), click: () => this.h.shooAll() },
       { type: 'separator' },
+      { label: 'Settings…', click: () => this.h.openSettings() },
       { label: 'Quit Perch', click: () => app.quit() }
     ])
   }

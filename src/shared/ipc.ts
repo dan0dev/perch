@@ -9,5 +9,6 @@ export const IPC = {
   height: 'perch:height',
   getSettings: 'perch:get-settings',
   saveSettings: 'perch:save-settings',
-  closeSettings: 'perch:close-settings'
+  closeSettings: 'perch:close-settings',
+  appInfo: 'perch:app-info'
 } as const

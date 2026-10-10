@@ -39,6 +39,13 @@ export interface SettingsResult {
   settings: Settings
 }
 
+export interface AppInfo {
+  version: string
+  isPackaged: boolean
+  settingsPath: string
+  snipFolder: string
+}
+
 /** The API exposed on window.perch by the preload script. */
 export interface PerchApi {
   onState(cb: (state: ShelfState) => void): () => void
@@ -52,4 +59,5 @@ export interface PerchApi {
   getSettings(): Promise<Settings>
   saveSettings(next: Settings): Promise<SettingsResult>
   closeSettings(): void
+  appInfo(): Promise<AppInfo>
 }

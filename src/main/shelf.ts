@@ -36,7 +36,7 @@ export class Shelf {
   readonly win: BrowserWindow
   private visible = false
   private hovering = false
-  private dragging = false
+  private busy = false
   private hideTimer: NodeJS.Timeout | null = null
   private concealTimer: NodeJS.Timeout | null = null
   private contentHeight = MIN_HEIGHT
@@ -134,16 +134,16 @@ export class Shelf {
     else this.scheduleHide()
   }
 
-  /** Auto-hide is suspended while a drag is in progress. */
-  setDragging(dragging: boolean): void {
-    this.dragging = dragging
-    if (dragging) this.clearHideTimer()
+  /** Auto-hide is suspended while a drag or a Save dialog is in progress. */
+  setBusy(busy: boolean): void {
+    this.busy = busy
+    if (busy) this.clearHideTimer()
     else this.scheduleHide()
   }
 
   private scheduleHide(): void {
     this.clearHideTimer()
-    if (!this.visible || this.hovering || this.dragging) return
+    if (!this.visible || this.hovering || this.busy) return
     this.hideTimer = setTimeout(() => this.hide(), AUTO_HIDE_MS)
   }
 

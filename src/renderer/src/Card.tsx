@@ -5,6 +5,7 @@ import { CheckIcon, CopyIcon, DraggedIcon, MoreIcon, PinIcon, SaveIcon, TrashIco
 
 interface Props {
   item: ShelfItem
+  leaving: boolean
   now: number
   selected: boolean
   menuOpen: boolean
@@ -20,7 +21,7 @@ function remaining(item: ShelfItem, now: number): number {
   return total > 0 ? Math.min(1, Math.max(0, (item.expiresAt - now) / total)) : 0
 }
 
-export function Card({ item, now, selected, menuOpen, onToggleSelect, onToggleMenu, onDragStart }: Props): React.JSX.Element {
+export function Card({ item, leaving, now, selected, menuOpen, onToggleSelect, onToggleMenu, onDragStart }: Props): React.JSX.Element {
   const label = flyOffLabel(item.expiresAt, now)
 
   const handleDragStart = (e: DragEvent<HTMLLIElement>): void => {
@@ -38,6 +39,7 @@ export function Card({ item, now, selected, menuOpen, onToggleSelect, onToggleMe
 
   const cls = [
     'card',
+    leaving && 'is-leaving',
     selected && 'is-selected',
     item.dragged && 'is-dragged',
     item.pinned && 'is-pinned',
@@ -49,9 +51,10 @@ export function Card({ item, now, selected, menuOpen, onToggleSelect, onToggleMe
   return (
     <li
       className={cls}
-      draggable
+      draggable={!leaving}
       onDragStart={handleDragStart}
-      onClick={() => onToggleSelect(item.id)}
+      onClick={() => !leaving && onToggleSelect(item.id)}
+      aria-hidden={leaving || undefined}
       title={`${item.fileName} · ${item.width}×${item.height}\n${label}${item.dragged ? '\nDragged out' : ''}`}
       aria-selected={selected}
     >

@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { IPC } from '../shared/ipc'
-import type { CardAction, PerchApi, Settings, SettingsResult, ShelfState } from '../shared/types'
+import type { AppInfo, CardAction, PerchApi, Settings, SettingsResult, ShelfState } from '../shared/types'
 
 function listen<T>(channel: string, cb: (value: T) => void): () => void {
   const handler = (_e: IpcRendererEvent, value: T): void => cb(value)
@@ -18,7 +18,8 @@ const api: PerchApi = {
   reportHeight: (px: number) => ipcRenderer.send(IPC.height, px),
   getSettings: () => ipcRenderer.invoke(IPC.getSettings) as Promise<Settings>,
   saveSettings: (next: Settings) => ipcRenderer.invoke(IPC.saveSettings, next) as Promise<SettingsResult>,
-  closeSettings: () => ipcRenderer.send(IPC.closeSettings)
+  closeSettings: () => ipcRenderer.send(IPC.closeSettings),
+  appInfo: () => ipcRenderer.invoke(IPC.appInfo) as Promise<AppInfo>
 }
 
 contextBridge.exposeInMainWorld('perch', api)

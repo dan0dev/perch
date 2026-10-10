@@ -57,6 +57,15 @@ export function normalizeSettings(raw: unknown): Settings {
   return out
 }
 
+/** Parses the text of settings.json. Invalid JSON gives defaults. */
+export function parseSettingsFile(text: string): Settings {
+  try {
+    return normalizeSettings(JSON.parse(text))
+  } catch {
+    return { ...DEFAULT_SETTINGS }
+  }
+}
+
 /** Same as normalizeSettings, but says what was wrong instead of fixing it silently. */
 export function validateSettings(s: Settings): string | null {
   if (!Number.isInteger(s.expiryMinutes) || s.expiryMinutes < EXPIRY_MIN || s.expiryMinutes > EXPIRY_MAX) {

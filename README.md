@@ -13,8 +13,8 @@ you can paste it but can't drag it into an upload box. Perch catches every image
 the clipboard, shows it as a card at the edge of your screen, and lets you drag it into any app or
 browser drop zone as a real PNG file. Snips expire on their own.
 
-> **Status:** in development. Milestones 1–3 (capture, shelf, drag out) are built; expiry,
-> card actions, tray menu, settings and the installer are next. See [PLAN.md](PLAN.md).
+> **Status:** in development. Capture, shelf, drag out, expiry, card actions, tray menu and
+> settings are built; polish and the installer are next. See [PLAN.md](PLAN.md).
 
 ## Shortcuts
 
@@ -23,7 +23,15 @@ browser drop zone as a real PNG file. Snips expire on their own.
 | <kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | Take a snip (Windows). It lands on the shelf. |
 | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> | Show or hide the shelf. |
 | Click a card | Select it. Drag any selected card to take them all. |
-| Tray icon | Click to show or hide the shelf; right-click for the menu. |
+| … on a card | Copy, Save as…, Pin (skips expiry), Delete. |
+| Tray icon | Click to show or hide the shelf. Right-click: Pause capture, Shoo everything, Settings, Quit. |
+
+Snips fly off after 15 minutes by default; change it (1 minute to 24 hours) in Settings, along
+with the hotkey, the screen edge and launch at login. Settings are saved to
+`%APPDATA%\Perch\settings.json`.
+
+From a terminal, `Perch.exe --settings` opens settings and `Perch.exe --quit` quits a running
+Perch.
 
 ## Privacy
 

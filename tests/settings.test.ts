@@ -4,6 +4,7 @@ import {
   acceleratorFromKey,
   isValidHotkey,
   normalizeSettings,
+  parseSettingsFile,
   prettyHotkey,
   validateSettings
 } from '../src/shared/settings'
@@ -74,5 +75,16 @@ describe('hotkeys', () => {
   it('pretty-prints for display', () => {
     expect(prettyHotkey('Control+Alt+S')).toBe('Ctrl+Alt+S')
     expect(prettyHotkey('Super+Shift+S')).toBe('Win+Shift+S')
+  })
+})
+
+describe('parseSettingsFile', () => {
+  it('reads a saved file', () => {
+    const text = JSON.stringify({ expiryMinutes: 45, hotkey: 'Control+Shift+P', edge: 'left', launchAtLogin: true })
+    expect(parseSettingsFile(text)).toEqual({ expiryMinutes: 45, hotkey: 'Control+Shift+P', edge: 'left', launchAtLogin: true })
+  })
+  it('falls back to defaults for broken JSON', () => {
+    expect(parseSettingsFile('{ not json')).toEqual(DEFAULT_SETTINGS)
+    expect(parseSettingsFile('')).toEqual(DEFAULT_SETTINGS)
   })
 })

@@ -1,37 +1,175 @@
 import { existsSync } from 'node:fs'
+import { copyFile, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { app, globalShortcut, ipcMain, nativeImage } from 'electron'
-import { ClipboardWatcher } from './clipboard'
-import { SnipStore } from './store'
+import { Notification, app, dialog, globalShortcut, ipcMain, nativeImage, nativeTheme } from 'electron'
+import { ClipboardWatcher, writeClipImage } from './clipboard'
+import { SnipStore, type Snip } from './store'
 import { Shelf } from './shelf'
 import { installNetGuard } from './netguard'
-import { PerchTray } from './tray'
+import { PerchTray, appIcon } from './tray'
+import { loadSettings, saveSettings, settingsPath } from './settings'
+import { closeSettings, openSettings } from './settingsWindow'
 import { IPC } from '../shared/ipc'
+import { prettyHotkey, validateSettings } from '../shared/settings'
+import type { CardAction, Settings, SettingsResult } from '../shared/types'
+
+/** How often expired snips are swept off the shelf and the disk. */
+const SWEEP_MS = 5_000
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
   app.setAppUserModelId('app.perch')
-  const store = new SnipStore(join(tmpdir(), 'Perch'), () => 15)
+  nativeTheme.themeSource = 'dark' // dark title bar and tray menu
+
+  let settings: Settings
+  const store = new SnipStore(join(tmpdir(), 'Perch'), () => settings.expiryMinutes)
   let shelf: Shelf | null = null
   let watcher: ClipboardWatcher | null = null
   let tray: PerchTray | null = null
 
   const pushState = (): void => {
-    shelf?.pushState({ items: store.toShelf(), paused: watcher?.isPaused ?? false, edge: 'right' })
+    shelf?.pushState({ items: store.toShelf(), paused: watcher?.isPaused ?? false, edge: settings.edge })
   }
 
-  app.on('second-instance', () => shelf?.show())
+  /** Plain, actionable messages. Errors only; Perch never nags. */
+  const notify = (body: string): void => {
+    console.warn('[perch]', body)
+    if (Notification.isSupported()) new Notification({ title: 'Perch', body, icon: appIcon(), silent: true }).show()
+  }
+
+  const toggleShelf = (): void => shelf?.toggle()
+
+  /** Swaps the global hotkey. Restores the old one if the new one is taken. */
+  const applyHotkey = (next: string, prev: string | null): boolean => {
+    if (prev === next && globalShortcut.isRegistered(next)) return true
+    if (prev) globalShortcut.unregister(prev)
+    let ok = false
+    try {
+      ok = globalShortcut.register(next, toggleShelf)
+    } catch {
+      ok = false
+    }
+    if (!ok && prev) globalShortcut.register(prev, toggleShelf)
+    return ok
+  }
+
+  const applyLoginItem = (openAtLogin: boolean): void => {
+    // In development this would register the bare electron.exe, so only the installed app does it.
+    if (app.isPackaged) app.setLoginItemSettings({ openAtLogin })
+  }
+
+  const setPaused = (paused: boolean): void => {
+    watcher?.setPaused(paused)
+    tray?.setPaused(paused)
+    pushState()
+  }
+
+  // ---------- Card actions ----------
+
+  const copySnip = async (snip: Snip): Promise<void> => {
+    try {
+      const png = await readFile(snip.filePath)
+      store.markSelf(snip.hash) // never re-capture our own copy
+      await writeClipImage(png)
+      await watcher?.ignoreCurrent()
+    } catch (err) {
+      notify(`Couldn't copy ${snip.fileName}. The file may be gone; take the snip again.`)
+      console.error(err)
+    }
+  }
+
+  const saveSnipAs = async (snip: Snip): Promise<void> => {
+    shelf?.setBusy(true)
+    try {
+      const res = await dialog.showSaveDialog({
+        title: 'Save snip',
+        defaultPath: join(app.getPath('pictures'), snip.fileName),
+        filters: [{ name: 'PNG image', extensions: ['png'] }]
+      })
+      if (!res.canceled && res.filePath) await copyFile(snip.filePath, res.filePath)
+    } catch (err) {
+      notify(`Couldn't save ${snip.fileName}: ${(err as Error).message}. Try another folder.`)
+    } finally {
+      shelf?.setBusy(false)
+    }
+  }
+
+  const runAction = async (id: unknown, action: unknown): Promise<void> => {
+    const snip = typeof id === 'string' ? store.get(id) : undefined
+    if (!snip) return
+    switch (action as CardAction) {
+      case 'copy':
+        return copySnip(snip)
+      case 'save':
+        return saveSnipAs(snip)
+      case 'pin':
+        return store.togglePin(snip.id)
+      case 'delete':
+        return store.remove([snip.id])
+    }
+  }
+
+  // ---------- Settings ----------
+
+  const updateSettings = (raw: unknown): SettingsResult => {
+    if (typeof raw !== 'object' || raw === null) return { ok: false, error: 'Settings were not readable.', settings }
+    const r = raw as Partial<Settings>
+    const next: Settings = {
+      expiryMinutes: Number(r.expiryMinutes),
+      hotkey: String(r.hotkey ?? ''),
+      edge: r.edge as Settings['edge'],
+      launchAtLogin: r.launchAtLogin === true
+    }
+    const problem = validateSettings(next)
+    if (problem) return { ok: false, error: problem, settings }
+
+    if (next.hotkey !== settings.hotkey && !applyHotkey(next.hotkey, settings.hotkey)) {
+      return {
+        ok: false,
+        error: `${prettyHotkey(next.hotkey)} is taken by another app. Pick a different one.`,
+        settings
+      }
+    }
+    try {
+      saveSettings(next)
+    } catch (err) {
+      if (next.hotkey !== settings.hotkey) applyHotkey(settings.hotkey, next.hotkey)
+      return { ok: false, error: `Couldn't save settings to ${settingsPath()}: ${(err as Error).message}`, settings }
+    }
+
+    const edgeChanged = next.edge !== settings.edge
+    if (next.launchAtLogin !== settings.launchAtLogin) applyLoginItem(next.launchAtLogin)
+    settings = next
+    if (edgeChanged) shelf?.setEdge(next.edge)
+    pushState() // expiry times shown on cards follow the new setting
+    void store.sweep()
+    return { ok: true, settings }
+  }
+
+  /** `Perch.exe --settings` opens settings, `--quit` quits a running Perch; anything else shows the shelf. */
+  const handleArgs = (argv: readonly string[], firstRun: boolean): void => {
+    if (argv.includes('--quit')) return firstRun ? undefined : app.quit()
+    if (argv.includes('--settings')) return openSettings()
+    if (!firstRun) shelf?.show()
+  }
+  app.on('second-instance', (_e, argv) => handleArgs(argv, false))
 
   app.whenReady().then(async () => {
     installNetGuard()
+    settings = loadSettings()
     store.wipe()
 
-    shelf = new Shelf('right')
+    shelf = new Shelf(settings.edge)
     tray = new PerchTray({
       isShelfVisible: () => shelf?.isVisible ?? false,
-      toggleShelf: () => shelf?.toggle()
+      toggleShelf,
+      isPaused: () => watcher?.isPaused ?? false,
+      setPaused,
+      hasSnips: () => store.list().length > 0,
+      shooAll: () => void store.clear(),
+      openSettings
     })
     store.on('change', pushState)
 
@@ -40,6 +178,16 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on(IPC.height, (_e, px: unknown) => {
       if (typeof px === 'number') shelf?.setContentHeight(px)
     })
+    ipcMain.on(IPC.action, (_e, id: unknown, action: unknown) => void runAction(id, action))
+    ipcMain.handle(IPC.getSettings, () => settings)
+    ipcMain.handle(IPC.saveSettings, (_e, raw: unknown) => updateSettings(raw))
+    ipcMain.on(IPC.closeSettings, () => closeSettings())
+    ipcMain.handle(IPC.appInfo, () => ({
+      version: app.getVersion(),
+      isPackaged: app.isPackaged,
+      settingsPath: settingsPath(),
+      snipFolder: store.dir
+    }))
 
     ipcMain.on(IPC.startDrag, (e, ids: unknown, dragImage: unknown) => {
       if (!Array.isArray(ids)) return
@@ -54,7 +202,7 @@ if (!app.requestSingleInstanceLock()) {
           ? nativeImage.createFromDataURL(dragImage)
           : null
       const icon = drawn && !drawn.isEmpty() ? drawn : first.dragIcon
-      shelf?.setDragging(true)
+      shelf?.setBusy(true)
       try {
         // Blocks on Windows until the drop finishes or is cancelled.
         e.sender.startDrag({ file: first.filePath, files: snips.map((s) => s.filePath), icon })
@@ -62,7 +210,7 @@ if (!app.requestSingleInstanceLock()) {
       } catch (err) {
         console.error('[perch] drag failed:', err)
       } finally {
-        shelf?.setDragging(false)
+        shelf?.setBusy(false)
       }
     })
 
@@ -76,15 +224,21 @@ if (!app.requestSingleInstanceLock()) {
           console.log(`[perch] captured ${snip.fileName} ${snip.width}x${snip.height} in ${ms} ms`)
           shelf?.show()
         })
-        .catch((err) => console.error('[perch] could not save snip:', err))
+        .catch((err) => notify(`Couldn't save the snip: ${(err as Error).message}. Check free space on your system drive.`))
     })
-    if (!globalShortcut.register('Control+Alt+S', () => shelf?.toggle())) {
-      console.warn('[perch] Ctrl+Alt+S is taken by another app.')
+
+    if (!applyHotkey(settings.hotkey, null)) {
+      notify(`${prettyHotkey(settings.hotkey)} is taken by another app. Pick a different hotkey in Settings.`)
     }
+
+    setInterval(() => {
+      if (store.list().length) store.sweep().catch((err) => console.error('[perch] sweep failed:', err))
+    }, SWEEP_MS)
 
     await watcher.start()
     pushState()
-    console.log(`[perch] watching clipboard (${watcher.mode}), saving to ${store.dir}`)
+    handleArgs(process.argv, true)
+    console.log(`[perch] watching clipboard (${watcher.mode}), saving to ${store.dir}, expiry ${settings.expiryMinutes} min`)
   })
 
   // No windows in the taskbar: closing them must not quit the app.

@@ -2,12 +2,17 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { ShelfState } from '@shared/types'
 import { Card } from './Card'
 import { drawDragImage } from './dragImage'
+import { dropLeaving, mergeLeaving, type Shown } from './leaving'
+import type { ShelfItem } from '@shared/types'
 import logoUrl from '../../../assets/perch.svg'
 
 /** Transparent space around the content, for shadows and the tilt. Mirrors --gap in CSS. */
 const GAP = 10
 
 const EMPTY: ShelfState = { items: [], paused: false, edge: 'right' }
+/** Matches the CSS "fly" animation. */
+const LEAVE_MS = 180
+const reducedMotion = (): boolean => matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /** Re-renders every `intervalMs` so expiry labels and perch lines stay current. */
 function useTick(intervalMs: number): void {
@@ -23,6 +28,7 @@ export function Shelf(): React.JSX.Element {
   const [revealed, setRevealed] = useState(false)
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
   const [menuFor, setMenuFor] = useState<string | null>(null)
+  const [shown, setShown] = useState<Shown<ShelfItem>[]>([])
   useTick(15_000)
   const now = Date.now()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -41,6 +47,18 @@ export function Shelf(): React.JSX.Element {
       offReveal()
     }
   }, [])
+
+  // Cards that left the list stay a moment to lift away.
+  useEffect(() => {
+    setShown((prev) => {
+      const next = mergeLeaving(prev, state.items)
+      const ghosts = new Set(next.filter((s) => s.leaving).map((s) => s.item.id))
+      if (ghosts.size === 0) return next
+      if (reducedMotion()) return dropLeaving(next, ghosts)
+      setTimeout(() => setShown((cur) => dropLeaving(cur, ghosts)), LEAVE_MS)
+      return next
+    })
+  }, [state.items])
 
   // Forget selections and menus for cards that are gone.
   useEffect(() => {
@@ -94,7 +112,6 @@ export function Shelf(): React.JSX.Element {
     [selected, state.items]
   )
 
-  const count = state.items.length
   const panelCls = ['panel', `edge-${state.edge}`, revealed && 'is-revealed'].filter(Boolean).join(' ')
 
   return (
@@ -112,7 +129,7 @@ export function Shelf(): React.JSX.Element {
 
       <div ref={scrollRef} className="scroll">
         <div ref={innerRef} className="inner">
-          {count === 0 ? (
+          {shown.length === 0 ? (
             <div className="glass empty">
               <img src={logoUrl} alt="" width={30} height={30} draggable={false} />
               <p>
@@ -121,10 +138,11 @@ export function Shelf(): React.JSX.Element {
             </div>
           ) : (
             <ul className="cards">
-              {state.items.map((item) => (
+              {shown.map(({ item, leaving }) => (
                 <Card
                   key={item.id}
                   item={item}
+                  leaving={leaving}
                   now={now}
                   selected={selected.has(item.id)}
                   menuOpen={menuFor === item.id}

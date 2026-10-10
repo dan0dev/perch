@@ -116,6 +116,12 @@ it is a 2 px ring plus a filled check.
   hovered). The hotkey toggles it.
 - **Expiry** is measured from capture time. Unpinning restarts nothing: a
   card unpinned after its time is up flies off at the next sweep.
+- **Expiry sweep** runs every 5 s, so a snip leaves at most 5 s after its time is up. Changing
+  the expiry setting applies to snips already on the shelf.
+- **Settings apply instantly** (no Save button), like Windows Settings. A hotkey that another app
+  owns is rejected with a plain message and the old one stays active.
+- **Command-line switches**: `--settings` opens settings, `--quit` quits a running Perch (both
+  work on an already-running instance).
 - **Launch at login** is only applied in the packaged app (in dev it would
   register the bare electron.exe).
 - **Filename collisions** within the same second get `-2`, `-3`, … suffixes.
