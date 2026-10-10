@@ -39,14 +39,18 @@ src/
     tray.ts           system tray menu
     settings.ts       load/save settings.json
     netguard.ts       blocks all network
-    lib/              pure, unit-tested logic
-      filename.ts  dedupe.ts  expiry.ts  settings-schema.ts
+    lib/              pure, unit-tested logic (filename.ts, dedupe.ts)
   preload/index.ts    contextBridge API (typed)
-  shared/types.ts     types shared by main/preload/renderer
+  shared/             types, IPC names and pure logic used by both sides
+                      (expiry.ts, settings.ts are unit-tested)
   renderer/           React UI (index.html, src/…)
 tests/                Vitest specs for src/main/lib
-build/                icons for electron-builder
-scripts/make-icons.mjs  generates the PNG icons (no external tools)
+assets/perch.svg      logo, source of every icon
+resources/            runtime icons (icon.ico, icon-paused.ico)
+build/                electron-builder resources (icon.png)
+scripts/make-icons.cjs  renders the icons from the SVG with Electron
+scripts/drop-test.html  local page that shows what a drop zone receives
+docs/DESIGN-REVIEW.md   HIG review and design decisions
 ```
 
 ## Risks
@@ -62,6 +66,35 @@ scripts/make-icons.mjs  generates the PNG icons (no external tools)
 | Electron/Chromium phoning home | spellcheck off, all non-local requests cancelled |
 | npm 10 arborist crash (`edgesOut`) on vitest peer deps | `.npmrc` sets `legacy-peer-deps=true` |
 
+## Distribution
+
+**Decision: a per-user NSIS installer** (`Perch-Setup-<version>.exe`, one click, no admin
+prompt, installs to `%LOCALAPPDATA%\Programs\Perch`). Configured in `electron-builder.yml`,
+not built yet.
+
+Why not a single portable `.exe`:
+
+- **Launch at login needs a stable path.** electron-builder's portable target unpacks the whole
+  app (~100 MB) into a temp folder on every start, so each launch costs seconds and the path it
+  runs from changes. An installed app starts instantly from the same place every time.
+- **Notifications need a Start menu shortcut.** Windows only shows toast notifications (used for
+  plain error messages like "Ctrl+Alt+S is taken") for unpackaged apps that have a Start menu
+  shortcut carrying their AppUserModelID (`app.perch`). The installer creates it.
+- **No admin needed.** Per-user install means no UAC prompt, and Perch never runs elevated.
+- **Clean removal** from Settings → Apps, like any other app.
+
+Both options are unsigned, so SmartScreen warns either way. If a no-install option is wanted
+later, a zip of the unpacked app is the easy add-on.
+
+## Icons
+
+`assets/perch.svg` (the hummingbird) is the single source. `npm run icons` renders it with
+Electron's Chromium into `resources/icon.ico` (16–256 px; app, window and tray),
+`resources/icon-paused.ico` (greyed tray icon while capture is paused) and `build/icon.png`.
+The UI accent `#6BAFD0` is the logo's wing blue. Check glyphs on it are `#0B2233` (6.7:1).
+Because the glass cards sit over whatever is on the desktop, selection is never colour alone:
+it is a 2 px ring plus a filled check.
+
 ## Decisions not covered by the brief (simpler option picked)
 
 - **Dedupe scope**: an image is a duplicate if it matches a card currently
@@ -71,6 +104,10 @@ scripts/make-icons.mjs  generates the PNG icons (no external tools)
   ignored. Same when un-pausing: images copied while napping are not caught.
 - **Fallback watcher** (if FFI fails) polls every 1000 ms instead of 300 ms,
   since it must read and hash the image to notice a change.
+- **Card actions** live behind a round "…" button (menu: Copy, Save as…, Pin, Delete), matching
+  the reference design. Pinned cards show a pin chip that unpins on click.
+- **Thumbnails** are cropped to 16:10 in main (wide images keep their centre, tall ones keep
+  their top) so every card has the same shape. The file on disk is always the full image.
 - **Selection**: click a card to toggle selection. Dragging a selected card
   drags every selected card; dragging an unselected card drags just that one.
 - **Screen edge**: left or right of the primary display (no top/bottom).

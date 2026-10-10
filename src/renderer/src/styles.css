@@ -1,29 +1,31 @@
 /*
- * Tokens. Surfaces follow Windows 11 dark flyouts; amber means "selected"
- * and nothing else. Contrast figures are WCAG ratios against --card.
- * See docs/DESIGN-REVIEW.md.
+ * Perch shelf. Glass cards float straight on the desktop, tilted so their
+ * right edge leans toward you. The accent is the logo's wing blue and means
+ * "selected" and nothing else. See docs/DESIGN-REVIEW.md.
  */
 :root {
   --gap: 10px;
 
-  --panel: #262626; /* flyout surface */
-  --card: #2f2f2f; /* white 5% over panel */
-  --card-hover: #363636;
-  --well: #1b1b1b; /* recessed area behind thumbnails */
-  --stroke: rgba(255, 255, 255, 0.08);
-  --stroke-strong: rgba(255, 255, 255, 0.14);
+  --glass: rgba(18, 26, 38, 0.56);
+  --glass-sheen: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.02));
+  --glass-edge: rgba(255, 255, 255, 0.22);
+  --glass-text: rgba(18, 26, 38, 0.86); /* glass that carries text stays legible over white */
+  --glass-solid: #1b2330; /* reduced transparency */
+  --chip: rgba(12, 14, 18, 0.72);
+  --chip-hover: rgba(30, 34, 42, 0.9);
 
-  --text: #f3f3f3; /* 13.6:1 on panel */
-  --text-2: #c8c8c8; /* 8.0:1 on card, 7.2:1 on hover */
-  --perch-track: #444444;
-  --perch-fill: #9a9a9a; /* 4.8:1 on card */
+  --text: #f3f5f7;
+  --text-2: #cdd5dd;
 
-  --accent: #f4a24c; /* selection only */
-  --accent-ink: #1b1308; /* glyphs on accent fill */
+  --accent: #6bafd0; /* logo wing blue; selection only */
+  --accent-ink: #0b2233; /* glyphs on accent fill, 6.7:1 */
 
-  --r-overlay: 8px;
-  --r-card: 6px;
-  --r-control: 4px;
+  --r-glass: 18px;
+  --r-image: 11px;
+  --r-menu: 12px;
+
+  --tilt: perspective(760px) rotateY(-9deg);
+  --tilt-hover: perspective(760px) rotateY(-4deg);
 
   --fast: 160ms;
   --ease-settle: cubic-bezier(0.2, 0.9, 0.3, 1.15);
@@ -63,28 +65,48 @@ kbd {
   font: inherit;
   font-size: 11px;
   padding: 0 5px;
-  border-radius: var(--r-control);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--stroke-strong);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-bottom-width: 2px;
-  color: var(--text);
 }
 
-/* ---------- Panel ---------- */
+/* ---------- Glass ---------- */
+
+.glass {
+  position: relative;
+  border-radius: var(--r-glass);
+  background: var(--glass-sheen), var(--glass);
+  border: 1px solid var(--glass-edge);
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.34),
+    0 2px 6px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.pill {
+  margin: 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--glass-sheen), var(--glass-text);
+  border: 1px solid var(--glass-edge);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  color: var(--text-2);
+  font-size: 12px;
+  flex: none;
+}
+
+/* ---------- Panel (transparent container) ---------- */
 
 .panel {
   position: absolute;
   inset: var(--gap);
   display: flex;
   flex-direction: column;
-  background: var(--panel);
-  border: 1px solid var(--stroke);
-  border-radius: var(--r-overlay);
-  box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.42),
-    0 1px 4px rgba(0, 0, 0, 0.28);
-  overflow: hidden;
-  transition: transform var(--fast) ease-out;
+  gap: 8px;
+  transition:
+    transform var(--fast) ease-out,
+    opacity var(--fast) ease-out;
 }
 .panel.edge-right {
   transform: translateX(calc(100% + var(--gap) * 2));
@@ -96,65 +118,42 @@ kbd {
   transform: none;
 }
 
-.head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 12px 7px;
-  flex: none;
-}
-.head .mark {
-  color: var(--text-2);
-}
-.head .name {
-  font-weight: 600;
-}
-.head .count {
-  margin-left: auto;
-  color: var(--text-2);
-  font-family: 'Segoe UI Variable Small', 'Segoe UI', sans-serif;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
 .status {
-  margin: 0 10px 8px;
-  padding: 5px 9px;
-  border-radius: var(--r-control);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-2);
-  font-size: 12px;
-  flex: none;
+  align-self: flex-start;
+  margin-left: 6px;
 }
 
 .scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
 }
 .scroll::-webkit-scrollbar {
-  width: 6px;
-}
-.scroll::-webkit-scrollbar-thumb {
-  border-radius: 3px;
-  background: transparent;
-}
-.scroll:hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.16);
-}
-.scroll::-webkit-scrollbar-button {
-  display: none;
+  width: 0;
 }
 
 .inner {
-  padding: 3px 10px 10px;
+  /* Room for shadows and the tilted right edge. */
+  padding: 6px 12px 14px 8px;
 }
 
 .empty {
-  margin: 4px 2px 6px;
+  background: var(--glass-sheen), var(--glass-text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  transform: var(--tilt);
+}
+.empty img {
+  flex: none;
+}
+.empty p {
+  margin: 0;
   color: var(--text-2);
-  line-height: 1.75;
+  line-height: 1.7;
 }
 
 .cards {
@@ -163,76 +162,78 @@ kbd {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
 }
 
 /* ---------- Card ---------- */
 
 .card {
   position: relative;
-  border-radius: var(--r-card);
-  background: var(--card);
-  outline: 2px solid transparent;
-  outline-offset: 1px;
   cursor: grab;
-  transition:
-    background var(--fast) ease,
-    outline-color var(--fast) ease;
   animation: land 190ms var(--ease-settle) both;
-}
-.card:hover {
-  background: var(--card-hover);
 }
 .card:active {
   cursor: grabbing;
 }
-.card.is-selected {
-  outline-color: var(--accent);
+.card.has-menu {
+  z-index: 2;
 }
 .card.is-leaving {
   animation: fly 170ms ease-in both;
   pointer-events: none;
 }
 
-.thumb {
-  position: relative;
-  display: grid;
-  place-items: center;
-  border-radius: var(--r-card) var(--r-card) 0 0;
-  overflow: hidden;
-  background: var(--well);
-}
-.thumb img {
-  display: block;
-  max-width: 100%;
-  max-height: 240px;
-  /* Keeps white screenshots from glowing against the dark panel. */
-  filter: brightness(0.92);
+.card .glass {
+  padding: 8px 8px 12px;
+  transform: var(--tilt);
+  transform-origin: 50% 50%;
   transition:
-    filter var(--fast) ease,
-    opacity var(--fast) ease;
+    transform var(--fast) ease,
+    box-shadow var(--fast) ease;
 }
-.card:hover .thumb img {
-  filter: none;
+.card:hover .glass {
+  transform: var(--tilt-hover);
 }
-.card.is-dragged .thumb img {
-  opacity: 0.5;
+.card.is-selected .glass {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 14px 30px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.frame {
+  aspect-ratio: 16 / 10;
+  border-radius: var(--r-image);
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: opacity var(--fast) ease;
+}
+.card.is-dragged .frame img {
+  opacity: 0.55;
 }
 
 /* Selection ring: hinted on hover, filled when selected. */
 .select-ring {
   position: absolute;
-  top: 6px;
-  left: 6px;
+  top: 15px;
+  left: 15px;
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
-  background: rgba(0, 0, 0, 0.35);
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
+  background: rgba(0, 0, 0, 0.32);
   color: var(--accent-ink);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
   opacity: 0;
   transition: opacity 120ms ease;
 }
@@ -245,49 +246,96 @@ kbd {
   background: var(--accent);
 }
 
-.actions {
+/* ---------- Chips (round buttons) ---------- */
+
+.chips {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 14px;
+  right: 14px;
   display: flex;
-  gap: 2px;
-  padding: 2px;
-  border-radius: var(--r-card);
-  background: rgba(32, 32, 32, 0.82);
-  border: 1px solid var(--stroke);
-  backdrop-filter: blur(8px);
-  opacity: 0;
-  transition: opacity 120ms ease;
+  flex-direction: column;
+  gap: 6px;
 }
-.card:hover .actions {
-  opacity: 1;
-}
-.actions button {
+
+.chip {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  background: var(--chip);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.chip:hover {
+  background: var(--chip-hover);
+}
+.chip.is-on {
+  color: var(--accent);
+}
+.chip.badge {
+  position: absolute;
+  left: 14px;
+  bottom: 18px;
+  width: 26px;
+  height: 26px;
+  cursor: inherit;
+}
+
+/* ---------- Menu ---------- */
+
+.menu {
+  position: absolute;
+  top: 14px;
+  right: 52px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: 4px;
+  border-radius: var(--r-menu);
+  background: rgba(22, 26, 33, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  cursor: default;
+  animation: pop 120ms ease-out both;
+}
+.menu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 30px;
+  padding: 0 10px;
   border: 0;
-  border-radius: var(--r-control);
+  border-radius: 8px;
   background: transparent;
-  color: var(--text);
+  text-align: left;
   cursor: pointer;
 }
-.actions button:hover {
+.menu button:hover {
   background: rgba(255, 255, 255, 0.09);
 }
-.actions button:active {
-  background: rgba(255, 255, 255, 0.05);
+.menu svg {
+  flex: none;
+  color: var(--text-2);
 }
 
 /* ---------- The perch (signature) ---------- */
 
 .perch {
-  height: 3px;
-  margin: 7px 9px 0;
-  border-radius: 1.5px;
-  background: var(--perch-track);
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 5px;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.12);
   overflow: hidden;
 }
 .card.is-pinned .perch {
@@ -296,63 +344,32 @@ kbd {
 .perch span {
   display: block;
   height: 100%;
-  background: var(--perch-fill);
+  background: rgba(255, 255, 255, 0.62);
   transform-origin: left center;
   transition: transform 600ms linear;
 }
 
-.meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 9px 7px;
-  font-family: 'Segoe UI Variable Small', 'Segoe UI', sans-serif;
-  font-size: 11px;
-  color: var(--text-2);
-  white-space: nowrap;
-}
-.meta .dims {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-variant-numeric: tabular-nums;
-}
-.meta .dragged {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-.meta .flyoff {
-  margin-left: auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
+/* ---------- Selection footer ---------- */
 
 .foot {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-top: 1px solid var(--stroke);
-  font-size: 12px;
-  color: var(--text-2);
-  flex: none;
+  gap: 10px;
+  margin: 0 12px 0 8px;
 }
 .link {
   margin-left: auto;
-  padding: 2px 4px;
+  padding: 2px 6px;
   border: 0;
-  border-radius: var(--r-control);
+  border-radius: 6px;
   background: none;
-  color: var(--accent);
+  color: var(--text);
+  text-decoration: underline 2px var(--accent);
+  text-underline-offset: 3px;
   cursor: pointer;
 }
 .link:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* ---------- Motion ---------- */
@@ -360,7 +377,7 @@ kbd {
 @keyframes land {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.97);
+    transform: translateY(-12px) scale(0.97);
   }
   70% {
     opacity: 1;
@@ -375,18 +392,26 @@ kbd {
 @keyframes fly {
   to {
     opacity: 0;
-    transform: translate(14px, -16px) rotate(2deg) scale(0.96);
+    transform: translate(16px, -18px) rotate(2deg) scale(0.96);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .panel,
   .card,
+  .card .glass,
   .card.is-leaving,
-  .actions,
+  .menu,
   .select-ring,
   .perch span,
-  .thumb img {
+  .frame img {
     animation: none !important;
     transition: none !important;
   }
@@ -395,37 +420,40 @@ kbd {
 /* ---------- Accessibility settings ---------- */
 
 @media (prefers-reduced-transparency: reduce) {
-  .actions {
-    background: #202020;
+  .glass,
+  .pill {
+    background: var(--glass-solid);
+  }
+  .chip,
+  .menu {
+    background: #10141a;
     backdrop-filter: none;
   }
 }
 
 @media (prefers-contrast: more) {
   :root {
-    --stroke: rgba(255, 255, 255, 0.32);
-    --stroke-strong: rgba(255, 255, 255, 0.5);
-    --text-2: #e6e6e6;
-    --perch-track: #6a6a6a;
-    --perch-fill: #e6e6e6;
+    --glass: rgba(10, 14, 20, 0.9);
+    --glass-edge: rgba(255, 255, 255, 0.6);
+    --text-2: #eef2f5;
   }
-  .card {
-    box-shadow: inset 0 0 0 1px var(--stroke);
-  }
-  .thumb img {
-    filter: none;
+  .chip {
+    border-color: rgba(255, 255, 255, 0.6);
   }
 }
 
 /* Windows contrast themes. */
 @media (forced-colors: active) {
-  .panel,
-  .card,
-  .actions {
+  .glass,
+  .pill,
+  .chip,
+  .menu {
     border: 1px solid CanvasText;
+    background: Canvas;
   }
-  .card.is-selected {
-    outline-color: Highlight;
+  .card.is-selected .glass {
+    border-color: Highlight;
+    box-shadow: 0 0 0 2px Highlight;
   }
   .card.is-selected .select-ring {
     background: Highlight;
@@ -435,8 +463,7 @@ kbd {
   .perch span {
     background: CanvasText;
   }
-  .select-ring,
-  .actions {
+  .select-ring {
     opacity: 1;
   }
 }

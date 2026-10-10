@@ -1,0 +1,37 @@
+# Perch packaging. Decision and reasoning: PLAN.md › "Distribution".
+appId: app.perch
+productName: Perch
+copyright: Copyright © 2026 Dániel K
+directories:
+  buildResources: build
+  output: dist
+files:
+  - out/**
+  - package.json
+  - resources/**
+  - '!**/*.map'
+asarUnpack:
+  # Native FFI binary has to live on disk, not inside app.asar.
+  - node_modules/koffi/**
+  - node_modules/@koromix/**
+  - resources/**
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: resources/icon.ico
+  # Unsigned for now: SmartScreen will warn on first run (see README).
+  signAndEditExecutable: true
+nsis:
+  # Per-user, one-click, no admin prompt. Installs to %LOCALAPPDATA%\Programs\Perch.
+  oneClick: true
+  perMachine: false
+  allowElevation: false
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  createDesktopShortcut: false
+  createStartMenuShortcut: true
+  shortcutName: Perch
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+  artifactName: Perch-Setup-${version}.${ext}

@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { BrowserWindow, screen } from 'electron'
 import { IPC } from '../shared/ipc'
 import type { Edge, ShelfState } from '../shared/types'
+import { appIcon } from './tray'
 
 /** Window width in DIPs, including the transparent margin for the shadow. */
 const WIDTH = 284
@@ -60,6 +61,7 @@ export class Shelf {
       focusable: false,
       hasShadow: false,
       title: 'Perch',
+      icon: appIcon(),
       webPreferences: secureWebPreferences()
     })
     this.win.setAlwaysOnTop(true, 'pop-up-menu')

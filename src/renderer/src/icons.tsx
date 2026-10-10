@@ -54,21 +54,16 @@ export const DraggedIcon = (p: IconProps): React.JSX.Element => (
   </svg>
 )
 
-export const CheckIcon = (p: IconProps): React.JSX.Element => (
-  <svg {...base({ strokeWidth: 3, ...p })}>
-    <path d="m5 12.5 4.5 4.5L19 7.5" />
+export const MoreIcon = (p: IconProps): React.JSX.Element => (
+  <svg {...base({ fill: 'currentColor', stroke: 'none', ...p })}>
+    <circle cx="5" cy="12" r="2" />
+    <circle cx="12" cy="12" r="2" />
+    <circle cx="19" cy="12" r="2" />
   </svg>
 )
 
-/** A small bird sitting on a branch. */
-export const BirdMark = (p: IconProps): React.JSX.Element => (
-  <svg width={18} height={18} viewBox="0 0 24 24" aria-hidden {...p}>
-    <path d="M2.5 19.5h19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" opacity=".55" />
-    <path
-      fill="currentColor"
-      d="M5.2 16.8c.6-4.6 3.9-8 8.3-8 1.2 0 2.2.3 3 .8l3.7-.5-2.3 2.1c.2.6.3 1.2.3 1.8 0 2.1-1.4 3.8-3.5 3.8H5.2Z"
-    />
-    <path d="M10.5 16.8v2.2M13.5 16.8v2.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    <circle cx="15.6" cy="10.9" r="0.95" fill="var(--panel)" />
+export const CheckIcon = (p: IconProps): React.JSX.Element => (
+  <svg {...base({ strokeWidth: 3, ...p })}>
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
   </svg>
 )

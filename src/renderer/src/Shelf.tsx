@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ShelfState } from '@shared/types'
 import { Card } from './Card'
-import { BirdMark } from './icons'
 import { drawDragImage } from './dragImage'
+import logoUrl from '../../../assets/perch.svg'
 
-/** Transparent space around the panel, for its shadow. Mirrors --gap in CSS. */
+/** Transparent space around the content, for shadows and the tilt. Mirrors --gap in CSS. */
 const GAP = 10
 
 const EMPTY: ShelfState = { items: [], paused: false, edge: 'right' }
 
-/** Re-renders every `intervalMs` so "Flies off in…" labels stay current. */
+/** Re-renders every `intervalMs` so expiry labels and perch lines stay current. */
 function useTick(intervalMs: number): void {
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -22,6 +22,7 @@ export function Shelf(): React.JSX.Element {
   const [state, setState] = useState<ShelfState>(EMPTY)
   const [revealed, setRevealed] = useState(false)
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
+  const [menuFor, setMenuFor] = useState<string | null>(null)
   useTick(15_000)
   const now = Date.now()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -30,7 +31,10 @@ export function Shelf(): React.JSX.Element {
 
   useEffect(() => {
     const offState = window.perch.onState(setState)
-    const offReveal = window.perch.onReveal(setRevealed)
+    const offReveal = window.perch.onReveal((v) => {
+      setRevealed(v)
+      if (!v) setMenuFor(null)
+    })
     window.perch.ready()
     return () => {
       offState()
@@ -38,13 +42,14 @@ export function Shelf(): React.JSX.Element {
     }
   }, [])
 
-  // Forget selections for cards that are gone.
+  // Forget selections and menus for cards that are gone.
   useEffect(() => {
+    const ids = new Set(state.items.map((i) => i.id))
     setSelected((prev) => {
-      const ids = new Set(state.items.map((i) => i.id))
       const next = new Set([...prev].filter((id) => ids.has(id)))
       return next.size === prev.size ? prev : next
     })
+    setMenuFor((m) => (m && ids.has(m) ? m : null))
   }, [state.items])
 
   // Tell main how tall the content wants to be; main clamps it to the screen.
@@ -67,6 +72,7 @@ export function Shelf(): React.JSX.Element {
   }, [])
 
   const toggleSelect = useCallback((id: string) => {
+    setMenuFor(null)
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
@@ -96,22 +102,23 @@ export function Shelf(): React.JSX.Element {
       ref={panelRef}
       className={panelCls}
       onMouseEnter={() => window.perch.setHover(true)}
-      onMouseLeave={() => window.perch.setHover(false)}
+      onMouseLeave={() => {
+        window.perch.setHover(false)
+        setMenuFor(null)
+      }}
+      onClick={() => setMenuFor(null)}
     >
-      <header className="head">
-        <BirdMark className="mark" />
-        <span className="name">Perch</span>
-        {count > 0 && <span className="count">{count}</span>}
-      </header>
-
-      {state.paused && <p className="status">Perch is napping.</p>}
+      {state.paused && <p className="pill status">Perch is napping.</p>}
 
       <div ref={scrollRef} className="scroll">
         <div ref={innerRef} className="inner">
           {count === 0 ? (
-            <p className="empty">
-              Nothing perched yet. Press <kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>.
-            </p>
+            <div className="glass empty">
+              <img src={logoUrl} alt="" width={30} height={30} draggable={false} />
+              <p>
+                Nothing perched yet. Press <kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>.
+              </p>
+            </div>
           ) : (
             <ul className="cards">
               {state.items.map((item) => (
@@ -120,7 +127,9 @@ export function Shelf(): React.JSX.Element {
                   item={item}
                   now={now}
                   selected={selected.has(item.id)}
+                  menuOpen={menuFor === item.id}
                   onToggleSelect={toggleSelect}
+                  onToggleMenu={setMenuFor}
                   onDragStart={startDrag}
                 />
               ))}
@@ -130,7 +139,7 @@ export function Shelf(): React.JSX.Element {
       </div>
 
       {selected.size > 1 && (
-        <footer className="foot">
+        <footer className="pill foot">
           <span>{selected.size} selected. Drag to take all.</span>
           <button type="button" className="link" onClick={() => setSelected(new Set())}>
             Clear

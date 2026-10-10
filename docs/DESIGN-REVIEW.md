@@ -110,3 +110,35 @@ per `branding.md`: "Ensure branding always defers to content."
 - **Alternative accent.** Windows exposes the user's accent colour
   (`systemPreferences.getAccentColor()`); using it for selection would follow `color.md`'s
   "prefer system colors". Kept amber for personality; switching is a one-line change.
+
+---
+
+## Revision 2: glass shelf (from the owner's reference)
+
+The owner supplied a reference: same-ratio frosted cards floating on the desktop, images filling
+the frame, a slight 3D tilt with the right edge toward the viewer, and round dark buttons. What
+changed from the review above, and what the guidelines say about it:
+
+- **Panel removed; cards float.** No header or panel surface, so branding defers to content
+  completely (`branding.md › Best practices`). The logo appears in the empty state only.
+- **Same shape for every card.** Thumbnails are cropped to 16:10 in the main process (wide images
+  keep their centre, tall ones their top). The file you drag is always the full image.
+- **Tilt.** `perspective(760px) rotateY(-9deg)`, easing to `-4deg` on hover. It is static, so it
+  costs nothing under Reduce Motion; only the hover ease is dropped there.
+- **Actions behind "…".** The hover toolbar became a round "…" chip with a small menu (Copy,
+  Save as…, Pin, Delete), plus a pin chip on pinned cards. Chips are 30 × 30 (desktop default is
+  28). Dimensions and the expiry text moved to the tooltip; the perch line stays as the at-a-glance
+  cue.
+- **Accent is the logo's wing blue `#6BAFD0`.** Still means "selected" only.
+- **Glass without blur.** A transparent Electron window can't blur the desktop behind it, and
+  Windows acrylic turns solid on inactive windows (the shelf is never active). So the glass is a
+  tinted, semi-transparent fill with a sheen and a light edge.
+  - Image cards use 56% tint: they carry no text, and chip icons stay at 7.9:1 even over a white
+    window.
+  - Glass that carries text (empty state, pills) uses 86% tint: secondary text measures 7.7:1
+    over white, 4.7:1 at the brightest corner of the sheen.
+  - The "Clear" link is light text with a blue underline, because blue text on glass over white
+    measured 2.9:1.
+  - Reduce Transparency switches all glass to solid `#1B2330`.
+- **Known trade-off.** Over a white window, the blue selection ring is only 1.7:1 against the
+  glass. Selection never relies on it alone: the filled check on the image carries it.

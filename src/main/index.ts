@@ -6,6 +6,7 @@ import { ClipboardWatcher } from './clipboard'
 import { SnipStore } from './store'
 import { Shelf } from './shelf'
 import { installNetGuard } from './netguard'
+import { PerchTray } from './tray'
 import { IPC } from '../shared/ipc'
 
 if (!app.requestSingleInstanceLock()) {
@@ -15,6 +16,7 @@ if (!app.requestSingleInstanceLock()) {
   const store = new SnipStore(join(tmpdir(), 'Perch'), () => 15)
   let shelf: Shelf | null = null
   let watcher: ClipboardWatcher | null = null
+  let tray: PerchTray | null = null
 
   const pushState = (): void => {
     shelf?.pushState({ items: store.toShelf(), paused: watcher?.isPaused ?? false, edge: 'right' })
@@ -27,6 +29,10 @@ if (!app.requestSingleInstanceLock()) {
     store.wipe()
 
     shelf = new Shelf('right')
+    tray = new PerchTray({
+      isShelfVisible: () => shelf?.isVisible ?? false,
+      toggleShelf: () => shelf?.toggle()
+    })
     store.on('change', pushState)
 
     ipcMain.on(IPC.ready, () => shelf?.onRendererReady())
@@ -85,6 +91,7 @@ if (!app.requestSingleInstanceLock()) {
   app.on('window-all-closed', () => {})
   app.on('will-quit', () => {
     globalShortcut.unregisterAll()
+    tray?.destroy()
     watcher?.stop()
     store.wipe()
   })

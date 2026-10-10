@@ -10,8 +10,9 @@ import { uniqueSnipName } from './lib/filename'
 import { expiresAt, splitExpired } from '../shared/expiry'
 import type { ShelfItem } from '../shared/types'
 
-const THUMB_WIDTH = 520
-const THUMB_MAX_HEIGHT = 520
+/** Cards show every snip at the same 16:10 shape. */
+const THUMB_W = 480
+const THUMB_H = 300
 const DRAG_ICON_WIDTH = 96
 
 export interface Snip {
@@ -37,6 +38,25 @@ function fit(img: NativeImage, maxW: number, maxH: number): NativeImage {
     height: Math.max(1, Math.round(height * scale)),
     quality: 'good'
   })
+}
+
+/**
+ * Crops to 16:10 like CSS object-fit: cover. Wide images keep their centre;
+ * tall ones keep their top, where a page's useful part usually is.
+ */
+function cover(img: NativeImage, w: number, h: number): NativeImage {
+  const { width, height } = img.getSize()
+  const target = w / h
+  let crop = { x: 0, y: 0, width, height }
+  if (width / height > target) {
+    const cw = Math.round(height * target)
+    crop = { x: Math.round((width - cw) / 2), y: 0, width: cw, height }
+  } else {
+    crop = { x: 0, y: 0, width, height: Math.round(width / target) }
+  }
+  const cropped = img.crop(crop)
+  const { width: cw2 } = cropped.getSize()
+  return cw2 > w ? cropped.resize({ width: w, height: h, quality: 'good' }) : cropped
 }
 
 /**
@@ -99,7 +119,7 @@ export class SnipStore extends EventEmitter {
       fileName,
       filePath,
       hash,
-      thumb: fit(img, THUMB_WIDTH, THUMB_MAX_HEIGHT).toDataURL(),
+      thumb: cover(img, THUMB_W, THUMB_H).toDataURL(),
       dragIcon: fit(img, DRAG_ICON_WIDTH, DRAG_ICON_WIDTH),
       width,
       height,
