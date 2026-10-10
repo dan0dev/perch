@@ -46,14 +46,6 @@ export const TrashIcon = (p: IconProps): React.JSX.Element => (
   </svg>
 )
 
-export const DraggedIcon = (p: IconProps): React.JSX.Element => (
-  <svg {...base(p)}>
-    <path d="M14 4h6v6" />
-    <path d="M20 4 11 13" />
-    <path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10" />
-  </svg>
-)
-
 export const MoreIcon = (p: IconProps): React.JSX.Element => (
   <svg {...base({ fill: 'currentColor', stroke: 'none', ...p })}>
     <circle cx="5" cy="12" r="2" />

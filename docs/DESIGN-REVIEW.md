@@ -142,3 +142,25 @@ changed from the review above, and what the guidelines say about it:
   - Reduce Transparency switches all glass to solid `#1B2330`.
 - **Known trade-off.** Over a white window, the blue selection ring is only 1.7:1 against the
   glass. Selection never relies on it alone: the filled check on the image carries it.
+
+---
+
+## Revision 3: just the images (owner's direction)
+
+The owner trimmed the shelf down to the screenshots themselves:
+
+- **No glass, no border.** Each card is the image with 14 px rounded corners and its own soft
+  shadow. Shadows are kept small (`0 6px 14px`) and the window leaves room around them, because
+  a shadow clipped by the transparent window's edge shows up as a grey box over light windows.
+- **No perch line.** Remaining time is in the tooltip only ("Flies off in 12 min").
+- **No "used" look.** Dragged cards look the same as fresh ones. (Fading them made the desktop
+  show through, since there is no panel behind the image any more.)
+- **Goofy stack.** On top of the 3D tilt, cards lean ±1.2° alternately down the shelf. When a new
+  snip lands on top, the others swap lean with a short settle; under Reduce Motion they just snap.
+- **Quieter chrome.** The "…" button appears on hover only; the pin badge stays because it shows
+  state. The selection footer is just the word **Clear**, centred under the cards, white with a
+  dark outline so it reads on light and dark wallpapers.
+
+What this costs, per the guidelines: the "…" button is hover-only, so it isn't discoverable until
+you point at a card (my judgment: the main trade-off of this revision). Tooltips are the only place showing
+time left. Both are deliberate choices for a quieter shelf.

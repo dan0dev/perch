@@ -2,6 +2,10 @@
 appId: app.perch
 productName: Perch
 copyright: Copyright © 2026 Dániel K
+# Perch never goes online (no auto-update), so no update metadata is generated.
+publish: null
+# The UI is English; Chromium's other 54 locale packs would add ~48 MB.
+electronLanguages: [en-US]
 directories:
   buildResources: build
   output: dist
@@ -19,6 +23,9 @@ win:
   target:
     - target: nsis
       arch: [x64]
+    - target: zip
+      arch: [x64]
+  artifactName: Perch-${version}-win-${arch}.${ext}
   icon: resources/icon.ico
   # Unsigned for now: SmartScreen will warn on first run (see README).
   signAndEditExecutable: true

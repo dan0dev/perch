@@ -13,6 +13,7 @@ export default defineConfig({
     resolve: {
       alias: { '@shared': resolve('src/shared') }
     },
-    plugins: [react()]
+    plugins: [react()],
+    build: { minify: true }
   }
 })

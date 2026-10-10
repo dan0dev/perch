@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { copyFile, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { Notification, app, dialog, globalShortcut, ipcMain, nativeImage, nativeTheme } from 'electron'
+import { Notification, app, dialog, globalShortcut, ipcMain, nativeImage, nativeTheme, shell } from 'electron'
 import { ClipboardWatcher, writeClipImage } from './clipboard'
 import { SnipStore, type Snip } from './store'
 import { Shelf } from './shelf'
@@ -17,7 +17,8 @@ import type { CardAction, Settings, SettingsResult } from '../shared/types'
 /** How often expired snips are swept off the shelf and the disk. */
 const SWEEP_MS = 5_000
 
-if (!app.requestSingleInstanceLock()) {
+// `--quit` only ever stops a running Perch; with none running it must not start one.
+if (!app.requestSingleInstanceLock() || process.argv.includes('--quit')) {
   app.quit()
 } else {
   app.setAppUserModelId('app.perch')
@@ -108,6 +109,12 @@ if (!app.requestSingleInstanceLock()) {
         return store.togglePin(snip.id)
       case 'delete':
         return store.remove([snip.id])
+      case 'open': {
+        // Opens in the default image viewer, to check a snip before sending it.
+        const err = await shell.openPath(snip.filePath)
+        if (err) notify(`Couldn't open ${snip.fileName}: ${err}. Drag it into an image app instead.`)
+        return
+      }
     }
   }
 
@@ -120,7 +127,9 @@ if (!app.requestSingleInstanceLock()) {
       expiryMinutes: Number(r.expiryMinutes),
       hotkey: String(r.hotkey ?? ''),
       edge: r.edge as Settings['edge'],
-      launchAtLogin: r.launchAtLogin === true
+      launchAtLogin: r.launchAtLogin === true,
+      alwaysOpen: r.alwaysOpen === true,
+      showOnEdgeHover: r.showOnEdgeHover === true
     }
     const problem = validateSettings(next)
     if (problem) return { ok: false, error: problem, settings }
@@ -143,6 +152,8 @@ if (!app.requestSingleInstanceLock()) {
     if (next.launchAtLogin !== settings.launchAtLogin) applyLoginItem(next.launchAtLogin)
     settings = next
     if (edgeChanged) shelf?.setEdge(next.edge)
+    shelf?.setAlwaysOpen(next.alwaysOpen)
+    shelf?.setEdgeHover(next.showOnEdgeHover)
     pushState() // expiry times shown on cards follow the new setting
     void store.sweep()
     return { ok: true, settings }
@@ -150,7 +161,7 @@ if (!app.requestSingleInstanceLock()) {
 
   /** `Perch.exe --settings` opens settings, `--quit` quits a running Perch; anything else shows the shelf. */
   const handleArgs = (argv: readonly string[], firstRun: boolean): void => {
-    if (argv.includes('--quit')) return firstRun ? undefined : app.quit()
+    if (argv.includes('--quit')) return void app.quit()
     if (argv.includes('--settings')) return openSettings()
     if (!firstRun) shelf?.show()
   }
@@ -162,6 +173,8 @@ if (!app.requestSingleInstanceLock()) {
     store.wipe()
 
     shelf = new Shelf(settings.edge)
+    shelf.setAlwaysOpen(settings.alwaysOpen)
+    shelf.setEdgeHover(settings.showOnEdgeHover)
     tray = new PerchTray({
       isShelfVisible: () => shelf?.isVisible ?? false,
       toggleShelf,
@@ -222,7 +235,7 @@ if (!app.requestSingleInstanceLock()) {
           if (!snip) return console.log('[perch] duplicate image skipped')
           const ms = Math.round(performance.now() - t0)
           console.log(`[perch] captured ${snip.fileName} ${snip.width}x${snip.height} in ${ms} ms`)
-          shelf?.show()
+          shelf?.show('snip')
         })
         .catch((err) => notify(`Couldn't save the snip: ${(err as Error).message}. Check free space on your system drive.`))
     })

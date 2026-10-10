@@ -7,6 +7,10 @@ export interface Settings {
   hotkey: string
   edge: Edge
   launchAtLogin: boolean
+  /** Never auto-hide the shelf while it has cards. */
+  alwaysOpen: boolean
+  /** Slide the shelf out when the pointer rests at its screen edge. */
+  showOnEdgeHover: boolean
 }
 
 /** What the renderer needs to draw one card. */
@@ -30,7 +34,7 @@ export interface ShelfState {
   edge: Edge
 }
 
-export type CardAction = 'copy' | 'save' | 'delete' | 'pin'
+export type CardAction = 'copy' | 'save' | 'delete' | 'pin' | 'open'
 
 export interface SettingsResult {
   ok: boolean

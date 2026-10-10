@@ -157,9 +157,8 @@ export function Shelf(): React.JSX.Element {
       </div>
 
       {selected.size > 1 && (
-        <footer className="pill foot">
-          <span>{selected.size} selected. Drag to take all.</span>
-          <button type="button" className="link" onClick={() => setSelected(new Set())}>
+        <footer className="foot">
+          <button type="button" className="clear" aria-label="Clear selection" onClick={() => setSelected(new Set())}>
             Clear
           </button>
         </footer>

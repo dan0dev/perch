@@ -1,7 +1,7 @@
 import type { DragEvent, MouseEvent } from 'react'
 import type { CardAction, ShelfItem } from '@shared/types'
 import { flyOffLabel } from '@shared/expiry'
-import { CheckIcon, CopyIcon, DraggedIcon, MoreIcon, PinIcon, SaveIcon, TrashIcon } from './icons'
+import { CheckIcon, CopyIcon, MoreIcon, PinIcon, SaveIcon, TrashIcon } from './icons'
 
 interface Props {
   item: ShelfItem
@@ -12,13 +12,6 @@ interface Props {
   onToggleSelect: (id: string) => void
   onToggleMenu: (id: string | null) => void
   onDragStart: (id: string, img: HTMLImageElement | null) => void
-}
-
-/** Share of the snip's time left, 0..1. */
-function remaining(item: ShelfItem, now: number): number {
-  if (item.expiresAt === null) return 1
-  const total = item.expiresAt - item.createdAt
-  return total > 0 ? Math.min(1, Math.max(0, (item.expiresAt - now) / total)) : 0
 }
 
 export function Card({ item, leaving, now, selected, menuOpen, onToggleSelect, onToggleMenu, onDragStart }: Props): React.JSX.Element {
@@ -54,6 +47,7 @@ export function Card({ item, leaving, now, selected, menuOpen, onToggleSelect, o
       draggable={!leaving}
       onDragStart={handleDragStart}
       onClick={() => !leaving && onToggleSelect(item.id)}
+      onDoubleClick={() => !leaving && window.perch.action(item.id, 'open')}
       aria-hidden={leaving || undefined}
       title={`${item.fileName} · ${item.width}×${item.height}\n${label}${item.dragged ? '\nDragged out' : ''}`}
       aria-selected={selected}
@@ -75,7 +69,7 @@ export function Card({ item, leaving, now, selected, menuOpen, onToggleSelect, o
           )}
           <button
             type="button"
-            className="chip"
+            className="chip more"
             title="More"
             aria-label="More actions"
             aria-expanded={menuOpen}
@@ -87,17 +81,6 @@ export function Card({ item, leaving, now, selected, menuOpen, onToggleSelect, o
           >
             <MoreIcon width={16} height={16} />
           </button>
-        </div>
-
-        {item.dragged && (
-          <span className="chip badge" title="Dragged out" aria-label="Dragged out">
-            <DraggedIcon width={13} height={13} />
-          </span>
-        )}
-
-        {/* The perch: shortens as the snip's time runs out. */}
-        <div className="perch" aria-hidden>
-          {!item.pinned && <span style={{ transform: `scaleX(${remaining(item, now)})` }} />}
         </div>
 
         {menuOpen && (

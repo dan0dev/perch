@@ -7,6 +7,7 @@ import type { NativeImage } from 'electron'
 import type { ClipImage } from './clipboard'
 import { Deduper } from './lib/dedupe'
 import { uniqueSnipName } from './lib/filename'
+import { overCap } from './lib/cap'
 import { expiresAt, splitExpired } from '../shared/expiry'
 import type { ShelfItem } from '../shared/types'
 
@@ -129,6 +130,9 @@ export class SnipStore extends EventEmitter {
     }
     this.items.unshift(snip)
     this.emit('change')
+    // A long burst of copies shouldn't pile up: the oldest unpinned cards fly off early.
+    const evict = overCap(this.items)
+    if (evict.length) await this.remove(evict)
     return snip
   }
 

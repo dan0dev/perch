@@ -21,7 +21,7 @@
   --accent-ink: #0b2233; /* glyphs on accent fill, 6.7:1 */
 
   --r-glass: 18px;
-  --r-image: 11px;
+  --r-image: 14px;
   --r-menu: 12px;
 
   --tilt: perspective(760px) rotateY(-9deg);
@@ -136,7 +136,7 @@ kbd {
 
 .inner {
   /* Room for shadows and the tilted right edge. */
-  padding: 6px 12px 14px 8px;
+  padding: 8px 16px 24px 16px;
 }
 
 .empty {
@@ -184,29 +184,42 @@ kbd {
 }
 
 .card .glass {
-  padding: 8px 8px 12px;
-  transform: var(--tilt);
+  /* Cards are just the image now: no glass panel around it. */
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--r-image);
+  box-shadow: none;
+  transform: var(--tilt) rotate(var(--spin, 0deg));
   transform-origin: 50% 50%;
-  transition:
-    transform var(--fast) ease,
-    box-shadow var(--fast) ease;
+  transition: transform 220ms var(--ease-settle);
 }
 .card:hover .glass {
-  transform: var(--tilt-hover);
+  transform: var(--tilt-hover) rotate(calc(var(--spin, 0deg) * 0.4));
 }
-.card.is-selected .glass {
-  border-color: var(--accent);
-  box-shadow:
-    0 0 0 2px var(--accent),
-    0 14px 30px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+/* Goofy stack: cards lean right, left, right… down the shelf. */
+.card:nth-child(odd) {
+  --spin: 1.2deg;
+}
+.card:nth-child(even) {
+  --spin: -1.2deg;
 }
 
 .frame {
   aspect-ratio: 16 / 10;
   border-radius: var(--r-image);
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  /* Kept small enough to fade out inside the window; a clipped shadow shows as a grey box. */
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.22);
+  transition: box-shadow var(--fast) ease;
+}
+.card.is-selected .frame {
+  box-shadow:
+    0 0 0 3px var(--accent),
+    0 6px 14px rgba(0, 0, 0, 0.3);
 }
 .frame img {
   display: block;
@@ -214,17 +227,14 @@ kbd {
   height: 100%;
   object-fit: cover;
   object-position: top center;
-  transition: opacity var(--fast) ease;
-}
-.card.is-dragged .frame img {
-  opacity: 0.55;
+  transition: filter var(--fast) ease;
 }
 
 /* Selection ring: hinted on hover, filled when selected. */
 .select-ring {
   position: absolute;
-  top: 15px;
-  left: 15px;
+  top: 10px;
+  left: 10px;
   display: grid;
   place-items: center;
   width: 22px;
@@ -250,8 +260,8 @@ kbd {
 
 .chips {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 9px;
+  right: 9px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -278,21 +288,24 @@ kbd {
 .chip.is-on {
   color: var(--accent);
 }
-.chip.badge {
-  position: absolute;
-  left: 14px;
-  bottom: 18px;
-  width: 26px;
-  height: 26px;
-  cursor: inherit;
+/* The … button only shows on hover (or while its menu is open). */
+.chip.more {
+  opacity: 0;
+  transition:
+    opacity 120ms ease,
+    background 120ms ease;
+}
+.card:hover .chip.more,
+.card.has-menu .chip.more {
+  opacity: 1;
 }
 
 /* ---------- Menu ---------- */
 
 .menu {
   position: absolute;
-  top: 14px;
-  right: 52px;
+  top: 9px;
+  right: 46px;
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -326,50 +339,32 @@ kbd {
   color: var(--text-2);
 }
 
-/* ---------- The perch (signature) ---------- */
-
-.perch {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 5px;
-  height: 2px;
-  border-radius: 1px;
-  background: rgba(255, 255, 255, 0.12);
-  overflow: hidden;
-}
-.card.is-pinned .perch {
-  background: transparent;
-}
-.perch span {
-  display: block;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.62);
-  transform-origin: left center;
-  transition: transform 600ms linear;
-}
-
 /* ---------- Selection footer ---------- */
 
+/* Just the word, centred under the cards. The shadow keeps it readable on any wallpaper. */
 .foot {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 12px 0 8px;
+  justify-content: center;
+  flex: none;
+  padding-bottom: 4px;
 }
-.link {
-  margin-left: auto;
-  padding: 2px 6px;
+.clear {
+  padding: 4px 10px;
   border: 0;
-  border-radius: 6px;
   background: none;
-  color: var(--text);
-  text-decoration: underline 2px var(--accent);
-  text-underline-offset: 3px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  /* Dark outline behind white letters: readable on light and dark wallpapers. */
+  -webkit-text-stroke: 3px rgba(0, 0, 0, 0.7);
+  paint-order: stroke fill;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
   cursor: pointer;
 }
-.link:hover {
-  background: rgba(255, 255, 255, 0.08);
+.clear:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ---------- Motion ---------- */
@@ -410,7 +405,7 @@ kbd {
   .card.is-leaving,
   .menu,
   .select-ring,
-  .perch span,
+  .frame,
   .frame img {
     animation: none !important;
     transition: none !important;
@@ -451,17 +446,16 @@ kbd {
     border: 1px solid CanvasText;
     background: Canvas;
   }
-  .card.is-selected .glass {
-    border-color: Highlight;
-    box-shadow: 0 0 0 2px Highlight;
+  .frame {
+    border-color: CanvasText;
+  }
+  .card.is-selected .frame {
+    box-shadow: 0 0 0 3px Highlight;
   }
   .card.is-selected .select-ring {
     background: Highlight;
     border-color: Highlight;
     color: HighlightText;
-  }
-  .perch span {
-    background: CanvasText;
   }
   .select-ring {
     opacity: 1;
@@ -474,7 +468,7 @@ kbd {
   --tilt-hover: perspective(760px) rotateY(4deg);
 }
 .panel.edge-left .inner {
-  padding: 6px 8px 14px 12px;
+  padding: 8px 16px 24px 16px;
 }
 
 /* ---------- Settings window ---------- */
@@ -624,9 +618,15 @@ html[data-view='settings'] body {
 }
 
 .s-toggle-row {
+  display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+}
+.s-group > .s-toggle-row + .s-toggle-row {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 .s-switch {
   position: relative;

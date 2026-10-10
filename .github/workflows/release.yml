@@ -1,0 +1,70 @@
+# Builds Perch from the tagged source on GitHub's machines and publishes the
+# installer, the portable zip and their SHA-256 checksums to a GitHub Release.
+#
+#   Release:  bump "version" in package.json, commit, then
+#             git tag v0.1.0 && git push origin v0.1.0
+#   Dry run:  Actions tab -> Release -> Run workflow (builds, uploads the files
+#             as a workflow artifact, publishes nothing)
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Check the tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $version. Bump the version first." >&2
+            exit 1
+          fi
+
+      - name: Build installer and zip
+        run: |
+          npx electron-vite build
+          npx electron-builder --win --publish never
+
+      - name: Checksums
+        shell: bash
+        working-directory: dist
+        run: sha256sum Perch-Setup-*.exe Perch-*-win-x64.zip | tee SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: perch-windows
+          path: |
+            dist/Perch-Setup-*.exe
+            dist/Perch-*-win-x64.zip
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/Perch-Setup-*.exe dist/Perch-*-win-x64.zip dist/SHA256SUMS.txt \
+            --title "Perch ${GITHUB_REF_NAME#v}" \
+            --generate-notes

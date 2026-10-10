@@ -4,7 +4,9 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   expiryMinutes: 15,
   hotkey: 'Control+Alt+S',
   edge: 'right',
-  launchAtLogin: false
+  launchAtLogin: false,
+  alwaysOpen: false,
+  showOnEdgeHover: false
 }
 
 export const EXPIRY_MIN = 1
@@ -54,6 +56,8 @@ export function normalizeSettings(raw: unknown): Settings {
   if (typeof r.hotkey === 'string' && isValidHotkey(r.hotkey)) out.hotkey = r.hotkey
   if (isEdge(r.edge)) out.edge = r.edge
   if (typeof r.launchAtLogin === 'boolean') out.launchAtLogin = r.launchAtLogin
+  if (typeof r.alwaysOpen === 'boolean') out.alwaysOpen = r.alwaysOpen
+  if (typeof r.showOnEdgeHover === 'boolean') out.showOnEdgeHover = r.showOnEdgeHover
   return out
 }
 

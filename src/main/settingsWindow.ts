@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, screen } from 'electron'
 import { loadRenderer, secureWebPreferences } from './shelf'
 import { appIcon } from './tray'
 
@@ -13,7 +13,8 @@ export function openSettings(): void {
   }
   win = new BrowserWindow({
     width: 440,
-    height: 640,
+    // Fits a 768 px laptop screen; the page scrolls if it ever has to.
+    height: Math.min(780, screen.getPrimaryDisplay().workArea.height - 60),
     useContentSize: true,
     resizable: false,
     maximizable: false,

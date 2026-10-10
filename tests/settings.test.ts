@@ -27,7 +27,7 @@ describe('normalizeSettings', () => {
   })
 
   it('keeps valid fields and drops invalid ones', () => {
-    const s = normalizeSettings({ expiryMinutes: 30, hotkey: 'banana', edge: 'top', launchAtLogin: true })
+    const s = normalizeSettings({ expiryMinutes: 30, hotkey: 'banana', edge: 'top', launchAtLogin: true, alwaysOpen: 'yes' })
     expect(s).toEqual({ ...DEFAULT_SETTINGS, expiryMinutes: 30, launchAtLogin: true })
   })
 
@@ -80,8 +80,19 @@ describe('hotkeys', () => {
 
 describe('parseSettingsFile', () => {
   it('reads a saved file', () => {
-    const text = JSON.stringify({ expiryMinutes: 45, hotkey: 'Control+Shift+P', edge: 'left', launchAtLogin: true })
-    expect(parseSettingsFile(text)).toEqual({ expiryMinutes: 45, hotkey: 'Control+Shift+P', edge: 'left', launchAtLogin: true })
+    const saved = {
+      expiryMinutes: 45,
+      hotkey: 'Control+Shift+P',
+      edge: 'left',
+      launchAtLogin: true,
+      alwaysOpen: true,
+      showOnEdgeHover: true
+    }
+    expect(parseSettingsFile(JSON.stringify(saved))).toEqual(saved)
+  })
+  it('reads a file from before the shelf settings existed', () => {
+    const old = JSON.stringify({ expiryMinutes: 45, hotkey: 'Control+Shift+P', edge: 'left', launchAtLogin: true })
+    expect(parseSettingsFile(old)).toMatchObject({ expiryMinutes: 45, alwaysOpen: false, showOnEdgeHover: false })
   })
   it('falls back to defaults for broken JSON', () => {
     expect(parseSettingsFile('{ not json')).toEqual(DEFAULT_SETTINGS)

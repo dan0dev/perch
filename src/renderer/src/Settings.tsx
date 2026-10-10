@@ -7,6 +7,21 @@ const PRESETS = [5, 15, 30, 60, 240]
 
 const presetLabel = (m: number): string => (m < 60 ? `${m} min` : `${m / 60} h`)
 
+function Switch({ on, labelledBy, onToggle }: { on: boolean; labelledBy: string; onToggle: () => void }): React.JSX.Element {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-labelledby={labelledBy}
+      className={on ? 's-switch is-on' : 's-switch'}
+      onClick={onToggle}
+    >
+      <span />
+    </button>
+  )
+}
+
 export function SettingsView(): React.JSX.Element {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [info, setInfo] = useState<AppInfo | null>(null)
@@ -152,6 +167,35 @@ export function SettingsView(): React.JSX.Element {
         </div>
       </section>
 
+      <section className="s-group">
+        <div className="s-toggle-row">
+          <div>
+            <span className="s-label" id="open-label">
+              Keep the shelf open
+            </span>
+            <p className="s-hint">It stays on screen while it has cards. The hotkey still hides it.</p>
+          </div>
+          <Switch
+            on={settings.alwaysOpen}
+            labelledBy="open-label"
+            onToggle={() => void apply({ alwaysOpen: !settings.alwaysOpen })}
+          />
+        </div>
+        <div className="s-toggle-row">
+          <div>
+            <span className="s-label" id="edge-hover-label">
+              Show at the screen edge
+            </span>
+            <p className="s-hint">Rest the pointer at the {settings.edge} edge of the screen for a moment.</p>
+          </div>
+          <Switch
+            on={settings.showOnEdgeHover}
+            labelledBy="edge-hover-label"
+            onToggle={() => void apply({ showOnEdgeHover: !settings.showOnEdgeHover })}
+          />
+        </div>
+      </section>
+
       <section className="s-group s-toggle-row">
         <div>
           <span className="s-label" id="login-label">
@@ -159,16 +203,11 @@ export function SettingsView(): React.JSX.Element {
           </span>
           {info && !info.isPackaged && <p className="s-hint">Takes effect in the installed app.</p>}
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={settings.launchAtLogin}
-          aria-labelledby="login-label"
-          className={settings.launchAtLogin ? 's-switch is-on' : 's-switch'}
-          onClick={() => void apply({ launchAtLogin: !settings.launchAtLogin })}
-        >
-          <span />
-        </button>
+        <Switch
+          on={settings.launchAtLogin}
+          labelledBy="login-label"
+          onToggle={() => void apply({ launchAtLogin: !settings.launchAtLogin })}
+        />
       </section>
 
       <footer className="s-foot">
